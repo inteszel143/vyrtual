@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
 import { useEffect, useMemo, useState } from "react";
+import { useToast } from "@/components/toast-provider";
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: "overview" },
@@ -110,6 +111,7 @@ function formatHours(totalSeconds: number) {
 }
 
 export default function TimeTrackingPage() {
+  const { notify } = useToast();
   const [entries, setEntries] = useState(sampleEntries);
   const [description, setDescription] = useState("Website updates");
   const [project, setProject] = useState("Website redesign");
@@ -162,11 +164,13 @@ export default function TimeTrackingPage() {
       ]);
       setStartTime("");
       setNow(0);
+      notify({ kind: "success", title: "Work session added", message: `${description.trim() || "Work session"} was recorded for ${formatDuration(durationSeconds)}.` });
       return;
     }
 
     setStartTime(String(Date.now()));
     setNow(Date.now());
+    notify({ kind: "success", title: "Timer started", message: `Tracking time for ${description.trim() || "Work session"}.` });
   }
 
   return (

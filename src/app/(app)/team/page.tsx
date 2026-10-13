@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
+import { useToast } from "@/components/toast-provider";
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: "overview" },
@@ -15,7 +16,20 @@ const navigation = [
   { label: "Reports", href: "/reports", icon: "reports" },
 ];
 
-const members = [
+type Member = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  type: "Employee" | "Freelancer";
+  status: string;
+  location: string;
+  initials: string;
+  color: string;
+  hours: string;
+};
+
+const initialMembers: Member[] = [
   { id: "avery-chen", name: "Avery Chen", email: "avery.chen@northstar.example", role: "Product designer", type: "Employee", status: "Working", location: "Work studio", initials: "AC", color: "bg-violet-400/20 text-violet-200", hours: "32.5h" },
   { id: "jordan-lee", name: "Jordan Lee", email: "jordan.lee@northstar.example", role: "Frontend developer", type: "Employee", status: "Online", location: "Work studio", initials: "JL", color: "bg-sky-400/20 text-sky-200", hours: "28h" },
   { id: "sam-rivera", name: "Sam Rivera", email: "sam.rivera@northstar.example", role: "Content writer", type: "Freelancer", status: "Working", location: "Meeting room", initials: "SR", color: "bg-rose-400/20 text-rose-200", hours: "18.5h" },
@@ -26,7 +40,7 @@ const members = [
   { id: "jamie-patel", name: "Jamie Patel", email: "jamie.patel@northstar.example", role: "Illustrator", type: "Freelancer", status: "Offline", location: "—", initials: "JP", color: "bg-orange-400/20 text-orange-200", hours: "12.5h" },
 ];
 
-const statusFilters = ["Everyone", "Working", "Online", "Away", "Offline"] as const;
+const statusFilters = ["Everyone", "Working", "Online", "Away", "Offline", "Invited"] as const;
 type StatusFilter = (typeof statusFilters)[number];
 type MemberTypeFilter = "Everyone" | "Employees" | "Freelancers";
 
@@ -84,19 +98,27 @@ function MemberAvatar({
 }
 
 export default function TeamPage() {
+  const { notify } = useToast();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Everyone");
   const [memberType, setMemberType] = useState<MemberTypeFilter>("Everyone");
+  const [teamMembers, setTeamMembers] = useState(initialMembers);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteName, setInviteName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("");
+  const [inviteType, setInviteType] = useState<Member["type"]>("Employee");
 
   const filteredMembers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return members.filter((member) => {
+    return teamMembers.filter((member) => {
       const matchesQuery =
         !normalizedQuery ||
         `${member.name} ${member.email} ${member.role}`.toLowerCase().includes(normalizedQuery);
       const matchesStatus =
-        statusFilter === "Everyone" || member.status === statusFilter;
+        statusFilter === "Everyone" ||
+        (statusFilter === "Invited" ? member.status === "Invited" : member.status === statusFilter);
       const matchesType =
         memberType === "Everyone" ||
         (memberType === "Employees" && member.type === "Employee") ||
@@ -104,7 +126,64 @@ export default function TeamPage() {
 
       return matchesQuery && matchesStatus && matchesType;
     });
-  }, [memberType, query, statusFilter]);
+  }, [memberType, query, statusFilter, teamMembers]);
+
+  function inviteMember(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalizedEmail = inviteEmail.trim().toLowerCase();
+    if (teamMembers.some((member) => member.email.toLowerCase() === normalizedEmail)) {
+      notify({ kind: "warning", title: "This email is already on the team", message: normalizedEmail });
+      return;
+    }
+
+    const fullName = inviteName.trim();
+    const initials = fullName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join("");
+    const invitee: Member = {
+      id: `invite-${normalizedEmail.replace(/[^a-z0-9]+/g, "-")}`,
+      name: fullName,
+      email: normalizedEmail,
+      role: inviteRole.trim(),
+      type: inviteType,
+      status: "Invited",
+      location: "Invitation pending",
+      initials,
+      color: "bg-sky-400/20 text-sky-200",
+      hours: "—",
+    };
+    setTeamMembers((current) => [invitee, ...current]);
+    setStatusFilter("Everyone");
+    setMemberType("Everyone");
+    setQuery("");
+
+    const body = [
+      `Hi ${fullName},`,
+      "",
+      `You’ve been invited to join Northstar Studio on Vyrtual as a ${inviteType.toLowerCase()}${inviteRole.trim() ? ` (${inviteRole.trim()})` : ""}.`,
+      "",
+      "Please reply to this email to coordinate access. This preview does not yet generate an account invitation link.",
+    ].join("\n");
+    const mailto = `mailto:${encodeURIComponent(normalizedEmail)}?${new URLSearchParams({
+      subject: "You’re invited to join Northstar Studio on Vyrtual",
+      body,
+    }).toString()}`;
+
+    setInviteOpen(false);
+    setInviteName("");
+    setInviteEmail("");
+    setInviteRole("");
+    setInviteType("Employee");
+    notify({
+      kind: "success",
+      title: "Invitation prepared",
+      message: "The person was added as pending. Send the prepared email to invite them.",
+    });
+    window.location.href = mailto;
+  }
 
   return (
     <main className="min-h-screen bg-[#09090d] text-white">
@@ -233,21 +312,27 @@ export default function TeamPage() {
                 <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] sm:text-[34px]">Your team</h1>
                 <p className="mt-2 text-sm text-zinc-400">Get to know the people behind the work.</p>
               </div>
-              <Link
-                href="/office"
-                className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-xl border border-white/[0.09] bg-white/[0.035] px-4 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/[0.07] sm:self-auto"
-              >
-                <Icon name="officeDoor" className="size-4" />
-                Visit the office
-              </Link>
+              <div className="flex flex-wrap gap-2 self-start sm:self-auto">
+                <button type="button" onClick={() => setInviteOpen(true)} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-300 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-sky-200">
+                  <span aria-hidden="true" className="text-lg leading-none">+</span>
+                  Invite teammate
+                </button>
+                <Link
+                  href="/office"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/[0.09] bg-white/[0.035] px-4 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/[0.07]"
+                >
+                  <Icon name="officeDoor" className="size-4" />
+                  Visit the office
+                </Link>
+              </div>
             </section>
 
             <section aria-label="Team summary" className="mt-8 grid gap-3 sm:grid-cols-3">
               <article className="rounded-2xl border border-white/[0.07] bg-[#111116] p-4 sm:p-5">
                 <p className="text-xs text-zinc-500">Team members</p>
                 <div className="mt-3 flex items-end justify-between">
-                  <span className="text-2xl font-semibold tracking-tight">18</span>
-                  <span className="text-xs text-zinc-500">Across 4 roles</span>
+                  <span className="text-2xl font-semibold tracking-tight">{18 + teamMembers.filter((member) => member.status === "Invited").length}</span>
+                  <span className="text-xs text-zinc-500">Including pending invites</span>
                 </div>
               </article>
               <article className="rounded-2xl border border-white/[0.07] bg-[#111116] p-4 sm:p-5">
@@ -338,14 +423,18 @@ export default function TeamPage() {
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <h3 className="truncate text-sm font-semibold text-white">{member.name}</h3>
                             <span className={`inline-flex items-center gap-1.5 text-[10px] ${
-                              member.status === "Working" || member.status === "Online"
+                              member.status === "Invited"
+                                ? "text-sky-300"
+                                : member.status === "Working" || member.status === "Online"
                                 ? "text-emerald-300"
                                 : member.status === "Away"
                                   ? "text-amber-300"
                                   : "text-zinc-500"
                             }`}>
                               <span className={`size-1.5 rounded-full ${
-                                member.status === "Working" || member.status === "Online"
+                                member.status === "Invited"
+                                  ? "bg-sky-300"
+                                  : member.status === "Working" || member.status === "Online"
                                   ? "bg-emerald-300"
                                   : member.status === "Away"
                                     ? "bg-amber-300"
@@ -367,9 +456,13 @@ export default function TeamPage() {
                           {member.location}
                         </span>
                         <span className="shrink-0 text-[11px] text-zinc-400">{member.hours} this week</span>
-                        <Link href={`/team/${member.id}`} className="shrink-0 text-[11px] font-medium text-sky-200 transition-colors hover:text-white">
-                          View profile
-                        </Link>
+                        {member.status === "Invited" ? (
+                          <span className="shrink-0 text-[11px] font-medium text-sky-200">Pending invite</span>
+                        ) : (
+                          <Link href={`/team/${member.id}`} className="shrink-0 text-[11px] font-medium text-sky-200 transition-colors hover:text-white">
+                            View profile
+                          </Link>
+                        )}
                       </div>
                     </article>
                   ))}
@@ -403,6 +496,60 @@ export default function TeamPage() {
           </div>
         </div>
       </div>
+      {inviteOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setInviteOpen(false);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="invite-team-title"
+            className="w-full max-w-lg rounded-2xl border border-white/[0.1] bg-[#111116] p-5 shadow-2xl shadow-black/50 sm:p-6"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-sky-300">Northstar Studio</p>
+                <h2 id="invite-team-title" className="mt-2 text-lg font-semibold">Invite a teammate</h2>
+                <p className="mt-1 text-xs leading-5 text-zinc-400">Add their personal details and prepare an invitation email.</p>
+              </div>
+              <button type="button" aria-label="Close invitation form" onClick={() => setInviteOpen(false)} className="flex size-8 shrink-0 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white">×</button>
+            </div>
+            <form onSubmit={inviteMember} className="mt-5 space-y-4">
+              <label className="block">
+                <span className="mb-2 block text-xs font-medium text-zinc-300">Full name</span>
+                <input autoFocus required maxLength={100} value={inviteName} onChange={(event) => setInviteName(event.target.value)} placeholder="e.g. Jamie Rivera" className="h-11 w-full rounded-xl border border-white/[0.09] bg-[#0d0d12] px-3.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-sky-300/40" />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-xs font-medium text-zinc-300">Email address</span>
+                <input type="email" autoComplete="email" required maxLength={254} value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} placeholder="teammate@company.com" className="h-11 w-full rounded-xl border border-white/[0.09] bg-[#0d0d12] px-3.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-sky-300/40" />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-2 block text-xs font-medium text-zinc-300">Job title / role</span>
+                  <input required maxLength={80} value={inviteRole} onChange={(event) => setInviteRole(event.target.value)} placeholder="e.g. Product designer" className="h-11 w-full rounded-xl border border-white/[0.09] bg-[#0d0d12] px-3.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-sky-300/40" />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-xs font-medium text-zinc-300">Team member type</span>
+                  <select value={inviteType} onChange={(event) => setInviteType(event.target.value === "Freelancer" ? "Freelancer" : "Employee")} className="h-11 w-full rounded-xl border border-white/[0.09] bg-[#0d0d12] px-3.5 text-sm text-zinc-100 outline-none focus:border-sky-300/40">
+                    <option>Employee</option>
+                    <option>Freelancer</option>
+                  </select>
+                </label>
+              </div>
+              <p className="rounded-xl border border-amber-300/10 bg-amber-300/[0.04] px-3.5 py-3 text-[11px] leading-5 text-zinc-400">
+                This preview adds them as pending and opens a prefilled email draft. Sending account invitations requires a connected email and invite service.
+              </p>
+              <div className="flex justify-end gap-2 pt-1">
+                <button type="button" onClick={() => setInviteOpen(false)} className="h-10 rounded-xl border border-white/[0.08] px-4 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.05]">Cancel</button>
+                <button type="submit" className="h-10 rounded-xl bg-sky-300 px-4 text-xs font-semibold text-slate-950 transition-colors hover:bg-sky-200">Prepare email invite</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

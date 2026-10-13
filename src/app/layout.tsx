@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist_Mono, Poppins } from "next/font/google";
+import ToastProvider from "@/components/toast-provider";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   document.documentElement.dataset.sidebarCollapsed = "true";
 }`}
         </Script>
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

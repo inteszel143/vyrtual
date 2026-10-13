@@ -7,7 +7,7 @@ import WorkClockControl from "@/components/work-clock-control";
 const navigation = [
   { label: "My workspace", href: "/my-workspace", icon: "overview" },
   { label: "My office", href: "/my-office", icon: "office" },
-  { label: "My time", href: "/my-time", icon: "time" },
+  { label: "Time logs", href: "/my-time", icon: "time" },
   { label: "My schedule", href: "/my-schedule", icon: "schedule" },
   { label: "My reports", href: "/my-reports", icon: "reports" },
   { label: "My profile", href: "/my-profile", icon: "profile" },

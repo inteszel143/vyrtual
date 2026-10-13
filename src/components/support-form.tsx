@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useToast } from "@/components/toast-provider";
 
 const supportEmail = "intesedzel@gmail.com";
 const categories = [
@@ -14,6 +15,7 @@ const inputClassName =
   "h-11 w-full rounded-xl border border-white/[0.09] bg-[#0d0d12] px-3.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 transition-colors focus:border-sky-300/40";
 
 export default function SupportForm() {
+  const { notify } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>(categories[0]);
@@ -39,6 +41,7 @@ export default function SupportForm() {
     setStatus(
       `Your email app should open with this message addressed to ${supportEmail}. Send the draft there to deliver your feedback.`,
     );
+    notify({ kind: "success", title: "Feedback email prepared", message: "Your email app will open with a draft. Send it there to deliver your feedback." });
     window.location.href = mailto;
   }
 

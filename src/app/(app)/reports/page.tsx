@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
 import { useState } from "react";
+import { useToast } from "@/components/toast-provider";
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: "overview" },
@@ -156,6 +157,7 @@ function escapeCsv(value: string | number) {
 }
 
 export default function ReportsPage() {
+  const { notify } = useToast();
   const [period, setPeriod] = useState<Period>("This week");
   const data = reportData[period];
   const billablePercentage = Math.round((data.billableHours / data.totalHours) * 100);
@@ -197,6 +199,7 @@ export default function ReportsPage() {
     anchor.click();
     anchor.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    notify({ kind: "success", title: "Report exported", message: `Your ${period.toLowerCase()} report has been downloaded as a CSV.` });
   }
 
   return (
