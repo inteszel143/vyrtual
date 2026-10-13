@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 
@@ -28,8 +29,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Script id="sidebar-collapse-init" strategy="beforeInteractive">
+          {`if (localStorage.getItem("vyrtual-sidebar-collapsed") === "true") {
+  document.documentElement.dataset.sidebarCollapsed = "true";
+}`}
+        </Script>
+        {children}
+      </body>
     </html>
   );
 }

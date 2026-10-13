@@ -1,0 +1,97 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+
+export default function ProfileMenu() {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (event.target instanceof Node && !menuRef.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label="Open profile menu"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((isOpen) => !isOpen)}
+        className="flex items-center gap-1.5 rounded-full p-0.5 text-zinc-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+      >
+        <span className="flex size-9 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-indigo-300 to-sky-300 text-xs font-semibold text-slate-950">
+          AM
+        </span>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          fill="none"
+          className={`size-4 transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          <path d="m5.5 7.5 4.5 4 4.5-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          aria-label="Profile menu"
+          className="absolute right-0 top-full z-50 mt-2 min-w-60 overflow-hidden rounded-xl border border-white/10 bg-[#15151c] p-1.5 shadow-xl shadow-black/40"
+        >
+          <div className="flex items-center gap-3 border-b border-white/[0.08] px-3 py-3">
+            <span
+              aria-hidden="true"
+              className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-indigo-300 to-sky-300 text-xs font-semibold text-slate-950"
+            >
+              AM
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-medium text-white">Alex Morgan</span>
+              <span className="block truncate text-xs text-zinc-500">alex@northstar.example</span>
+            </span>
+          </div>
+          <Link
+            href="/settings"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block rounded-lg px-3 py-2.5 text-sm text-zinc-200 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:bg-white/[0.06] focus-visible:outline-none"
+          >
+            Settings
+          </Link>
+          <Link
+            href="/login"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block rounded-lg px-3 py-2.5 text-sm text-zinc-200 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:bg-white/[0.06] focus-visible:outline-none"
+          >
+            Logout
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}

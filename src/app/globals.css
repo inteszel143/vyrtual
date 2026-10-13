@@ -26,3 +26,89 @@ body {
   line-height: 1.5;
   color: var(--foreground);
 }
+
+button:not(:disabled),
+[role="button"],
+input[type="button"]:not(:disabled),
+input[type="reset"]:not(:disabled),
+input[type="submit"]:not(:disabled) {
+  cursor: pointer;
+}
+
+@media (min-width: 1024px) {
+  #workspace-shell.sidebar-is-collapsed main > div > aside,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside {
+    width: 76px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  #workspace-shell.sidebar-is-collapsed .sidebar-logo-toggle svg,
+  html[data-sidebar-collapsed="true"] #workspace-shell .sidebar-logo-toggle svg {
+    transform: rotate(180deg);
+  }
+
+  #workspace-shell.sidebar-is-collapsed main > div > aside > div:first-child,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside > div:first-child {
+    justify-content: space-between;
+  }
+
+  #workspace-shell.sidebar-is-collapsed main > div > aside > div:first-child > a,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside > div:first-child > a {
+    display: none;
+  }
+
+  #workspace-shell.sidebar-is-collapsed main > div > aside > div:first-child,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside > div:first-child {
+    justify-content: center;
+  }
+
+  #workspace-shell.sidebar-is-collapsed main > div > aside > div:first-child > .sidebar-logo-toggle,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside > div:first-child > .sidebar-logo-toggle {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  #workspace-shell.sidebar-is-collapsed main > div > aside > div:first-child > a span,
+  #workspace-shell.sidebar-is-collapsed main > div > aside .sidebar-section-heading,
+  #workspace-shell.sidebar-is-collapsed main > div > aside > div:last-child > div > div:nth-child(2),
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside > div:first-child > a span,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside .sidebar-section-heading,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside > div:last-child > div > div:nth-child(2) {
+    display: none;
+  }
+
+  #workspace-shell.sidebar-is-collapsed main > div > aside nav a,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside nav a {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    font-size: 0;
+  }
+
+  #workspace-shell.sidebar-is-collapsed main > div > aside > div:last-child,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside > div:last-child {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+  }
+
+  #workspace-shell.sidebar-is-collapsed main > div > aside > div:last-child > div,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside > div:last-child > div {
+    justify-content: center;
+  }
+
+  #workspace-shell.sidebar-is-collapsed main > div > aside > div:last-child > a,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside > div:last-child > a {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    font-size: 0;
+  }
+
+  #workspace-shell.sidebar-is-collapsed main > div > aside > div:last-child > a svg,
+  html[data-sidebar-collapsed="true"] #workspace-shell main > div > aside > div:last-child > a svg {
+    display: none;
+  }
+}
