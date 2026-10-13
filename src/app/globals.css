@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050507;
+  --foreground: #ededed;
+  color-scheme: dark;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--background);
+  overscroll-behavior: none;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-poppins), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--foreground);
+}
