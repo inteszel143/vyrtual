@@ -1,4 +1,5 @@
 import type { ConnectionState } from "./types";
+import CompanyName from "@/components/company-name";
 
 export default function OfficeHeader({
   roomName,
@@ -12,7 +13,7 @@ export default function OfficeHeader({
   return (
     <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
       <div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-sky-200">Northstar Studio</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-sky-200"><CompanyName /></p>
         <h2 className="mt-2 text-xl font-semibold tracking-tight">{roomName}</h2>
         <p className="mt-1 text-xs text-zinc-400">{onlineCount} {onlineCount === 1 ? "person" : "people"} online</p>
       </div>

@@ -8,5 +8,6 @@ export type OfficeParticipant = {
   color: string;
   gradient: string;
   state: string;
+  room?: string;
   isLocal?: boolean;
 };

@@ -3,6 +3,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import ProfileMenu from "@/components/profile-menu";
 import WorkClockControl from "@/components/work-clock-control";
+import CompanyName from "@/components/company-name";
+import MessageButton from "@/components/message-button";
+import NotificationButton from "@/components/notification-button";
 
 const navigation = [
   { label: "My workspace", href: "/my-workspace", icon: "overview" },
@@ -97,12 +100,13 @@ export default function PersonalWorkspaceShell({
         <div className="min-w-0 flex-1">
           <header className="sticky top-0 z-10 flex h-[72px] items-center justify-between border-b border-white/[0.07] bg-[#09090d]/90 px-5 backdrop-blur-xl sm:px-8 lg:px-10">
             <div>
-              <p className="text-xs text-zinc-500">Northstar Studio <span className="px-1.5 text-zinc-700">/</span> Personal workspace</p>
-              <h1 className="mt-1 text-sm font-semibold text-zinc-100">{title}</h1>
+              <p className="text-xs text-zinc-500"><CompanyName /> <span className="px-1.5 text-zinc-700">/</span> Personal workspace</p>
             </div>
             <div className="flex items-center gap-3">
               <WorkClockControl />
-              <span className="hidden rounded-full border border-sky-300/15 bg-sky-300/[0.06] px-2.5 py-1 text-[10px] font-medium text-sky-200 sm:inline-flex">Freelancer view</span>
+              <span className="hidden items-center gap-1.5 rounded-full border border-sky-300/15 bg-sky-300/[0.06] px-2.5 py-1 text-[10px] font-medium text-sky-200 sm:inline-flex"><span aria-hidden="true" className="size-1.5 rounded-full bg-sky-300" />Freelancer workspace</span>
+              <NotificationButton />
+              <MessageButton href="/my-messages" />
               <ProfileMenu />
             </div>
           </header>

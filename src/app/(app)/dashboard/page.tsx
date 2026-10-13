@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
+import MessageButton from "@/components/message-button";
 import CompanyName from "@/components/company-name";
+import OwnerWorkspaceBadge from "@/components/owner-workspace-badge";
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: "overview" },
@@ -213,6 +215,7 @@ export default function DashboardPage() {
               <span className="text-zinc-200">Overview</span>
             </div>
             <div className="ml-auto flex items-center gap-3">
+              <OwnerWorkspaceBadge />
               <button
                 type="button"
                 aria-label="Notifications"
@@ -221,6 +224,7 @@ export default function DashboardPage() {
                 <Icon name="bell" className="size-[18px]" />
                 <span className="absolute right-2 top-2 size-1.5 rounded-full bg-sky-300" />
               </button>
+              <MessageButton />
               <ProfileMenu />
             </div>
           </header>

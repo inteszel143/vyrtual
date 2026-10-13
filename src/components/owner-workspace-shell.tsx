@@ -2,6 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import ProfileMenu from "@/components/profile-menu";
+import MessageButton from "@/components/message-button";
+import NotificationButton from "@/components/notification-button";
+import OwnerWorkspaceBadge from "@/components/owner-workspace-badge";
 
 const workspaceNavigation = [
   { label: "Overview", href: "/dashboard", icon: "overview" },
@@ -120,11 +123,12 @@ export default function OwnerWorkspaceShell({
         <div className="min-w-0 flex-1">
           <header className="sticky top-0 z-10 flex h-[72px] items-center justify-between border-b border-white/[0.07] bg-[#09090d]/90 px-5 backdrop-blur-xl sm:px-8 lg:px-10">
             <div>
-              <p className="text-xs text-zinc-500">Northstar Studio <span className="px-1.5 text-zinc-700">/</span> Owner workspace</p>
-              <h1 className="mt-1 text-sm font-semibold text-zinc-100">{title}</h1>
+              <p className="text-xs text-zinc-500">Owner workspace</p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="hidden rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-2.5 py-1 text-[10px] font-medium text-emerald-200 sm:inline-flex">Preview workspace</span>
+              <OwnerWorkspaceBadge />
+              <NotificationButton />
+              <MessageButton />
               <ProfileMenu />
             </div>
           </header>

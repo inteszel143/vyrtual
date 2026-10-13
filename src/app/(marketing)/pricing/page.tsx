@@ -4,20 +4,20 @@ import Link from "next/link";
 const plans = [
   {
     name: "Free",
-    description: "A simple place to bring your remote team together.",
+    description: "Try Vyrtual with your team for 14 days.",
     price: "$0",
-    priceDescription: "free forever",
+    priceDescription: "for 14 days",
     features: [
       "Team and freelancer directory",
       "Working-hours tracking",
-      "14 days of activity history",
+      "Full access for 14 days",
     ],
     cta: "Get started",
     href: "/signup",
   },
   {
     name: "Team",
-    description: "The essentials to keep a growing remote team in sync.",
+    description: "Everything you need to keep a growing team in sync.",
     price: "$19",
     priceDescription: "per member / month",
     features: [
@@ -25,6 +25,7 @@ const plans = [
       "Work activity verification",
       "Time and team reports",
       "Flexible employee and freelancer management",
+      "Invite up to 50 employees and freelancers",
     ],
     cta: "Choose Team",
     href: "/signup",
@@ -40,6 +41,7 @@ const plans = [
       "Advanced team insights",
       "Expanded reporting",
       "Priority support",
+      "Unlimited employees and freelancers",
     ],
     cta: "Choose Business",
     href: "/signup",
@@ -63,9 +65,9 @@ const faqs = [
       "Yes. Vyrtual is built to help companies manage remote employees and freelance collaborators in one virtual office.",
   },
   {
-    question: "Do you offer a plan for larger organizations?",
+    question: "Do you offer custom plans?",
     answer:
-      "Enterprise is tailored for larger teams. Contact us to discuss your organization’s needs.",
+      "Business includes unlimited employees and freelancers. Contact us if your organization needs a tailored setup.",
   },
 ];
 

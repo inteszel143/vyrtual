@@ -24,7 +24,7 @@ export default function ParticipantList({
               <span className={`flex size-9 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ${person.color}`}>{person.initials}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-xs font-medium text-zinc-200">{person.name}{person.isLocal ? " (You)" : ""}</span>
-                <span className="mt-1 block truncate text-[10px] text-zinc-500">{person.role}</span>
+                <span className="mt-1 block truncate text-[10px] text-zinc-500">{person.role}{person.room ? ` · ${person.room}` : ""}</span>
               </span>
               <span className={`inline-flex shrink-0 items-center gap-1.5 text-[10px] ${person.isLocal ? "text-sky-200" : "text-emerald-300"}`}>
                 <span className={`size-1.5 rounded-full ${person.isLocal ? "bg-sky-300" : "bg-emerald-300"}`} />

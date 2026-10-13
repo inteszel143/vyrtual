@@ -415,24 +415,25 @@ export default function Home() {
               {
                 name: "Free",
                 price: "$0",
-                detail: "free forever",
-                description: "The essentials to get your team started.",
+                detail: "for 14 days",
+                description: "Try Vyrtual with your team for 14 days.",
                 features: [
                   "Team and freelancer directory",
                   "Working-hours tracking",
-                  "14 days of activity history",
+                  "Full access for 14 days",
                 ],
               },
               {
                 name: "Team",
                 price: "$19",
                 detail: "per member / month",
-                description: "Tools to keep a growing team in sync.",
+                description: "Everything you need to keep a growing team in sync.",
                 featured: true,
                 features: [
                   "Everything in Free",
                   "Work activity verification",
                   "Time and team reports",
+                  "Invite up to 50 employees and freelancers",
                 ],
               },
               {
@@ -444,6 +445,7 @@ export default function Home() {
                   "Everything in Team",
                   "Advanced team insights",
                   "Expanded reporting and priority support",
+                  "Unlimited employees and freelancers",
                 ],
               },
             ].map((plan) => (

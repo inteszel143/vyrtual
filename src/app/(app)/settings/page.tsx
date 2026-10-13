@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
+import MessageButton from "@/components/message-button";
+import OwnerWorkspaceBadge from "@/components/owner-workspace-badge";
 import { useState, type FormEvent } from "react";
 import { useToast } from "@/components/toast-provider";
 
@@ -209,11 +211,12 @@ export default function SettingsPage() {
               <span className="text-zinc-200">Settings</span>
             </div>
             <div className="ml-auto flex items-center gap-3">
-              <span className="hidden rounded-full border border-white/[0.08] bg-white/[0.025] px-3 py-1.5 text-xs text-zinc-400 sm:inline-flex">Northstar Studio</span>
+              <OwnerWorkspaceBadge />
               <button type="button" aria-label="Notifications" className="relative flex size-10 items-center justify-center rounded-xl border border-white/[0.08] text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
                 <Icon name="bell" className="size-[18px]" />
                 <span className="absolute right-2 top-2 size-1.5 rounded-full bg-sky-300" />
               </button>
+              <MessageButton />
               <ProfileMenu />
             </div>
           </header>

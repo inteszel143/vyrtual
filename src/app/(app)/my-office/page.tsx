@@ -16,13 +16,8 @@ import {
 } from "@/lib/personal-work-session";
 import type { OfficeParticipant } from "@/components/my-office/types";
 import { useToast } from "@/components/toast-provider";
-
-const baseParticipants: OfficeParticipant[] = [
-  { id: "alex", name: "Alex Morgan", role: "Freelance product designer", initials: "AM", color: "bg-rose-300/15 text-rose-200", gradient: "from-rose-300 to-orange-300", state: "You", isLocal: true },
-  { id: "morgan", name: "Morgan Park", role: "Project lead", initials: "MP", color: "bg-emerald-300/15 text-emerald-200", gradient: "from-emerald-400/30 to-slate-700", state: "In a focus session" },
-  { id: "avery", name: "Avery Chen", role: "Product designer", initials: "AC", color: "bg-violet-300/15 text-violet-200", gradient: "from-violet-400/30 to-slate-700", state: "In the office" },
-  { id: "jordan", name: "Jordan Lee", role: "Frontend developer", initials: "JL", color: "bg-sky-300/15 text-sky-200", gradient: "from-sky-400/30 to-slate-700", state: "In a meeting" },
-];
+import { officePreviewParticipants } from "@/lib/office-preview";
+import Link from "next/link";
 
 export default function MyOfficePage() {
   const { notify } = useToast();
@@ -32,6 +27,7 @@ export default function MyOfficePage() {
     getPersonalWorkSessionServerSnapshot,
   );
   const joined = clockedInAt > 0;
+  const participants: OfficeParticipant[] = officePreviewParticipants;
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -131,18 +127,22 @@ export default function MyOfficePage() {
   };
 
   return (
-    <PersonalWorkspaceShell activeHref="/my-office" title="My office" description="Join your team’s virtual office and manage your local camera and microphone.">
+    <PersonalWorkspaceShell activeHref="/my-office" title="My office" description="Join the same Work studio shown in your company’s virtual office.">
       <div className="space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-sky-300/10 bg-sky-300/[0.04] px-4 py-3">
+          <p className="text-xs leading-5 text-zinc-300">Preview roster matches the company office. Presence, coworker media, and invitations are sample data, not live synced.</p>
+          <Link href="/office" className="shrink-0 text-xs font-medium text-sky-200 transition-colors hover:text-sky-100">View company office →</Link>
+        </div>
         <OfficeHeader
           roomName="Work studio"
-          onlineCount={baseParticipants.filter((person) => !person.isLocal || joined).length}
+          onlineCount={participants.filter((person) => !person.isLocal || joined).length}
           connection={joined ? "connected" : "disconnected"}
         />
 
         <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="space-y-4">
             <VideoGrid
-              participants={baseParticipants}
+              participants={participants}
               localStream={localStream}
               cameraEnabled={cameraEnabled}
               microphoneEnabled={microphoneEnabled}
@@ -159,12 +159,12 @@ export default function MyOfficePage() {
               onLeave={leaveOffice}
               onJoin={rejoinOffice}
             />
-            <p className="px-1 text-[10px] leading-5 text-zinc-600">Time in/out controls your office presence. Camera and microphone controls access only this device’s local preview; video is not broadcast to other participants.</p>
+            <p className="px-1 text-[10px] leading-5 text-zinc-600">Time in/out updates your office presence in this browser. Camera and microphone controls access only this device’s local preview; video is not broadcast to other participants.</p>
           </div>
 
           <aside className="space-y-4">
             <ConnectionStatus state={joined ? "connected" : "disconnected"} />
-            <ParticipantList participants={baseParticipants} joined={joined} />
+            <ParticipantList participants={participants} joined={joined} />
           </aside>
         </div>
       </div>

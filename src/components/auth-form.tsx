@@ -71,7 +71,7 @@ export default function AuthForm({ mode }: { mode: AuthFormMode }) {
   return (
     <div>
       <div className="text-center">
-        <h1 className="font-serif text-4xl tracking-[-0.035em] sm:text-[42px]">
+        <h1 className="text-4xl tracking-[-0.035em] sm:text-[42px]">
           {formCopy.title}
         </h1>
         <p className="mt-2 text-sm leading-6 text-zinc-500">

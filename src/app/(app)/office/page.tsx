@@ -1,6 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
+import CompanyName from "@/components/company-name";
 import ProfileMenu from "@/components/profile-menu";
+import MessageButton from "@/components/message-button";
+import OwnerWorkspaceBadge from "@/components/owner-workspace-badge";
+import { officePreviewParticipants as people } from "@/lib/office-preview";
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: "overview" },
@@ -10,15 +14,6 @@ const navigation = [
   { label: "Attendance", href: "/attendance", icon: "time" },
   { label: "Time tracking", href: "/time-tracking", icon: "time" },
   { label: "Reports", href: "/reports", icon: "reports" },
-];
-
-const people = [
-  { initials: "AC", name: "Avery Chen", role: "Product design", room: "Work studio", color: "bg-violet-400/20 text-violet-200" },
-  { initials: "JL", name: "Jordan Lee", role: "Engineering", room: "Work studio", color: "bg-sky-400/20 text-sky-200" },
-  { initials: "SR", name: "Sam Rivera", role: "Content", room: "Meeting room", color: "bg-rose-400/20 text-rose-200" },
-  { initials: "MP", name: "Morgan Park", role: "Project lead", room: "Meeting room", color: "bg-emerald-400/20 text-emerald-200" },
-  { initials: "TB", name: "Taylor Brooks", role: "Engineering", room: "Focus room", color: "bg-amber-400/20 text-amber-200" },
-  { initials: "CK", name: "Casey Kim", role: "Analytics", room: "Lounge", color: "bg-indigo-400/20 text-indigo-200" },
 ];
 
 const recentActivity = [
@@ -163,7 +158,7 @@ export default function OfficePage() {
             <div className="flex items-center gap-3">
               <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-300 to-indigo-400 text-xs font-semibold text-slate-950">NL</div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">Northstar Studio</p>
+                <p className="truncate text-sm font-medium text-white"><CompanyName /></p>
                 <p className="text-xs text-zinc-500">Free workspace</p>
               </div>
             </div>
@@ -199,10 +194,7 @@ export default function OfficePage() {
               <span className="text-zinc-200">Virtual office</span>
             </div>
             <div className="ml-auto flex items-center gap-3">
-              <span className="hidden items-center gap-2 rounded-full border border-emerald-300/10 bg-emerald-300/[0.06] px-3 py-1.5 text-xs font-medium text-emerald-200 sm:inline-flex">
-                <span className="size-1.5 rounded-full bg-emerald-300" />
-                Workspace preview
-              </span>
+              <OwnerWorkspaceBadge />
               <button
                 type="button"
                 aria-label="Notifications"
@@ -211,6 +203,7 @@ export default function OfficePage() {
                 <Icon name="bell" className="size-[18px]" />
                 <span className="absolute right-2 top-2 size-1.5 rounded-full bg-sky-300" />
               </button>
+              <MessageButton />
               <ProfileMenu />
             </div>
           </header>
@@ -237,7 +230,7 @@ export default function OfficePage() {
             <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
               <div>
                 <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-sky-300">
-                  Northstar Studio · Floor 1
+                  <CompanyName /> · Floor 1
                 </p>
                 <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] sm:text-[34px]">
                   Virtual office
@@ -267,7 +260,7 @@ export default function OfficePage() {
                   </div>
                   <div className="flex items-center gap-2 rounded-full border border-emerald-300/10 bg-emerald-300/[0.06] px-3 py-1.5 text-xs font-medium text-emerald-200">
                     <span className="size-1.5 rounded-full bg-emerald-300" />
-                    6 shown
+                    {people.length} shown
                   </div>
                 </div>
 
@@ -362,7 +355,7 @@ export default function OfficePage() {
                 <article className="rounded-2xl border border-white/[0.07] bg-[#111116] p-5">
                   <div className="flex items-center justify-between gap-3">
                     <h2 className="text-sm font-semibold text-white">In the office</h2>
-                    <span className="text-xs text-zinc-500">6 people</span>
+                    <span className="text-xs text-zinc-500">{people.length} people</span>
                   </div>
                   <div className="mt-4 divide-y divide-white/[0.06]">
                     {people.map(({ initials, name, role, room, color }) => (
