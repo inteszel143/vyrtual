@@ -5,18 +5,13 @@ import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
 import MessageButton from "@/components/message-button";
 import OwnerWorkspaceBadge from "@/components/owner-workspace-badge";
+import {
+  OwnerNavigationIcon,
+  ownerManageNavigation,
+  ownerWorkspaceNavigation as navigation,
+} from "@/components/owner-navigation";
 import { useMemo, useState, type FormEvent } from "react";
 import { useToast } from "@/components/toast-provider";
-
-const navigation = [
-  { label: "Overview", href: "/dashboard", icon: "overview" },
-  { label: "Virtual office", href: "/office", icon: "office" },
-  { label: "Team", href: "/team", icon: "team" },
-  { label: "Schedules", href: "/schedules", icon: "team" },
-  { label: "Attendance", href: "/attendance", icon: "time" },
-  { label: "Time tracking", href: "/time-tracking", icon: "time" },
-  { label: "Reports", href: "/reports", icon: "reports" },
-];
 
 type Member = {
   id: string;
@@ -217,25 +212,19 @@ export default function TeamPage() {
                     : "text-zinc-400 hover:bg-white/[0.04] hover:text-white"
                 }`}
               >
-                <Icon name={icon} className="size-[18px]" />
+                <OwnerNavigationIcon name={icon} />
                 {label}
               </Link>
             ))}
           </nav>
           <div className="sidebar-section-heading mb-3 mt-9 px-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-600">Manage</div>
           <nav aria-label="Workspace settings" className="space-y-1">
-            <Link href="/billing" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
-              <Icon name="billing" className="size-[18px]" />
-              Billing
-            </Link>
-            <Link href="/company-settings" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
-              <Icon name="settings" className="size-[18px]" />
-              Company settings
-            </Link>
-            <Link href="/settings" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
-              <Icon name="settings" className="size-[18px]" />
-              Settings
-            </Link>
+            {ownerManageNavigation.map(({ label, href, icon }) => (
+              <Link key={href} href={href} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
+                <OwnerNavigationIcon name={icon} />
+                {label}
+              </Link>
+            ))}
           </nav>
           <div className="mt-auto rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
             <div className="flex items-center gap-3">

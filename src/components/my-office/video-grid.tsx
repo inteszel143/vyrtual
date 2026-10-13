@@ -3,17 +3,20 @@
 import { useEffect, useRef } from "react";
 import type { OfficeParticipant } from "./types";
 import ProfileAvatar from "@/components/profile-avatar";
+import Link from "next/link";
 
 function VideoTile({
   participant,
   localStream,
   cameraEnabled,
   microphoneEnabled,
+  messageHrefBase,
 }: {
   participant: OfficeParticipant;
   localStream?: MediaStream | null;
   cameraEnabled?: boolean;
   microphoneEnabled?: boolean;
+  messageHrefBase: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isLocal = participant.isLocal === true;
@@ -22,6 +25,10 @@ function VideoTile({
     Offline: "⚫",
     Away: "🌙",
     Break: "☕",
+    "Meal Break": "🍽️",
+    Meeting: "👥",
+    Snoozed: "😴",
+    "Do not disturb": "🔕",
   }[participant.presence];
 
   useEffect(() => {
@@ -64,8 +71,18 @@ function VideoTile({
         </span>
       </div>
       {!isLocal && (
-        <div className="absolute right-3 top-3 rounded-md border border-white/[0.08] bg-black/35 px-2 py-1 text-[9px] text-zinc-300">
-          Sample tile
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          <span className="rounded-md border border-white/[0.08] bg-black/35 px-2 py-1 text-[9px] text-zinc-300">Sample tile</span>
+          <Link
+            href={`${messageHrefBase}?to=${encodeURIComponent(participant.id)}`}
+            aria-label={`Message ${participant.name}`}
+            title={`Message ${participant.name}`}
+            className="flex size-8 items-center justify-center rounded-lg border border-white/10 bg-black/40 text-white transition-colors hover:border-sky-300/40 hover:bg-sky-300/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+          >
+            <svg aria-hidden="true" className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z" />
+            </svg>
+          </Link>
         </div>
       )}
     </article>
@@ -78,12 +95,14 @@ export default function VideoGrid({
   cameraEnabled,
   microphoneEnabled,
   joined,
+  messageHrefBase,
 }: {
   participants: OfficeParticipant[];
   localStream: MediaStream | null;
   cameraEnabled: boolean;
   microphoneEnabled: boolean;
   joined: boolean;
+  messageHrefBase: string;
 }) {
   return (
     <section aria-label="Office video grid" className="grid gap-3 sm:grid-cols-2">
@@ -96,6 +115,7 @@ export default function VideoGrid({
             localStream={participant.isLocal ? localStream : null}
             cameraEnabled={participant.isLocal ? cameraEnabled : undefined}
             microphoneEnabled={participant.isLocal ? microphoneEnabled : undefined}
+            messageHrefBase={messageHrefBase}
           />
         );
       })}

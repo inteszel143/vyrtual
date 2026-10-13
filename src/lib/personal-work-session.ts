@@ -1,3 +1,5 @@
+import { postTimeInCheckIn } from "@/lib/message-preview";
+
 const STORAGE_KEY = "vyrtual-personal-work-session-started-at";
 const LOGS_STORAGE_KEY = "vyrtual-personal-work-session-logs";
 const CHANGE_EVENT = "vyrtual-personal-work-session-change";
@@ -59,7 +61,11 @@ function createDailyLogEntries(startedAt: number, endedAt: number): PersonalWork
 }
 
 export function timeInToPersonalWorkSession() {
-  window.localStorage.setItem(STORAGE_KEY, String(Date.now()));
+  if (getPersonalWorkSessionSnapshot() > 0) return;
+
+  const startedAt = Date.now();
+  postTimeInCheckIn(startedAt);
+  window.localStorage.setItem(STORAGE_KEY, String(startedAt));
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 

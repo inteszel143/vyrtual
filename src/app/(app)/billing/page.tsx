@@ -5,17 +5,12 @@ import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
 import MessageButton from "@/components/message-button";
 import OwnerWorkspaceBadge from "@/components/owner-workspace-badge";
+import {
+  OwnerNavigationIcon,
+  ownerManageNavigation,
+  ownerWorkspaceNavigation as navigation,
+} from "@/components/owner-navigation";
 import { useToast } from "@/components/toast-provider";
-
-const navigation = [
-  { label: "Overview", href: "/dashboard", icon: "overview" },
-  { label: "Virtual office", href: "/office", icon: "office" },
-  { label: "Team", href: "/team", icon: "team" },
-  { label: "Schedules", href: "/schedules", icon: "team" },
-  { label: "Attendance", href: "/attendance", icon: "time" },
-  { label: "Time tracking", href: "/time-tracking", icon: "time" },
-  { label: "Reports", href: "/reports", icon: "reports" },
-];
 
 const invoices = [
   { number: "VYR-2026-010", date: "Oct 1, 2026", period: "October 2026", amount: 342, status: "Paid" },
@@ -119,25 +114,32 @@ export default function BillingPage() {
                 href={href}
                 className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white"
               >
-                <Icon name={icon} className="size-[18px]" />
+                <OwnerNavigationIcon name={icon} />
                 {label}
               </Link>
             ))}
           </nav>
           <div className="sidebar-section-heading mb-3 mt-9 px-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-600">Manage</div>
           <nav aria-label="Workspace settings" className="space-y-1">
-            <Link href="/billing" aria-current="page" className="flex items-center gap-3 rounded-xl bg-sky-400/10 px-3 py-2.5 text-sm font-medium text-sky-200">
-              <Icon name="billing" className="size-[18px]" />
-              Billing
-            </Link>
-            <Link href="/company-settings" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
-              <Icon name="settings" className="size-[18px]" />
-              Company settings
-            </Link>
-            <Link href="/settings" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
-              <Icon name="settings" className="size-[18px]" />
-              Settings
-            </Link>
+            {ownerManageNavigation.map(({ label, href, icon }) => {
+              const active = href === "/billing";
+
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-sky-400/10 text-sky-200"
+                      : "text-zinc-400 hover:bg-white/[0.04] hover:text-white"
+                  }`}
+                >
+                  <OwnerNavigationIcon name={icon} />
+                  {label}
+                </Link>
+              );
+            })}
           </nav>
           <div className="mt-auto rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
             <div className="flex items-center gap-3">

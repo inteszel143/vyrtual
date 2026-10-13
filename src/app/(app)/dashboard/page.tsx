@@ -4,16 +4,7 @@ import ProfileMenu from "@/components/profile-menu";
 import MessageButton from "@/components/message-button";
 import CompanyName from "@/components/company-name";
 import OwnerWorkspaceBadge from "@/components/owner-workspace-badge";
-
-const navigation = [
-  { label: "Overview", href: "/dashboard", icon: "overview" },
-  { label: "Virtual office", href: "/office", icon: "office" },
-  { label: "Team", href: "/team", icon: "team" },
-  { label: "Schedules", href: "/schedules", icon: "team" },
-  { label: "Attendance", href: "/attendance", icon: "time" },
-  { label: "Time tracking", href: "/time-tracking", icon: "time" },
-  { label: "Reports", href: "/reports", icon: "reports" },
-];
+import { OwnerNavigationIcon, ownerWorkspaceNavigation as navigation } from "@/components/owner-navigation";
 
 const metrics = [
   {
@@ -138,18 +129,18 @@ export default function DashboardPage() {
             Workspace
           </div>
           <nav aria-label="Workspace navigation" className="space-y-1">
-            {navigation.map(({ label, href, icon }, index) => (
+            {navigation.map(({ label, href, icon }) => (
               <Link
                 key={href}
                 href={href}
-                aria-current={index === 0 ? "page" : undefined}
+                aria-current={href === "/dashboard" ? "page" : undefined}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                  index === 0
+                  href === "/dashboard"
                     ? "bg-sky-400/10 text-sky-200"
                     : "text-zinc-400 hover:bg-white/[0.04] hover:text-white"
                 }`}
               >
-                <Icon name={icon} className="size-[18px]" />
+                <OwnerNavigationIcon name={icon} />
                 {label}
               </Link>
             ))}
@@ -164,11 +155,11 @@ export default function DashboardPage() {
               Billing
             </Link>
             <Link href="/company-settings" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
-              <Icon name="settings" className="size-[18px]" />
+              <OwnerNavigationIcon name="company" />
               Company settings
             </Link>
             <Link href="/settings" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
-              <Icon name="settings" className="size-[18px]" />
+              <OwnerNavigationIcon name="profile" />
               Settings
             </Link>
           </nav>
@@ -197,13 +188,13 @@ export default function DashboardPage() {
               <span className="font-semibold tracking-tight">Vyrtual</span>
             </div>
             <nav aria-label="Workspace navigation" className="hidden items-center gap-1 sm:flex lg:hidden">
-              {navigation.map(({ label, href }, index) => (
+              {navigation.map(({ label, href }) => (
                 <Link
                   key={href}
                   href={href}
-                  aria-current={index === 0 ? "page" : undefined}
+                  aria-current={href === "/dashboard" ? "page" : undefined}
                   className={`rounded-lg px-3 py-2 text-xs font-medium ${
-                    index === 0 ? "bg-sky-400/10 text-sky-200" : "text-zinc-400 hover:text-white"
+                    href === "/dashboard" ? "bg-sky-400/10 text-sky-200" : "text-zinc-400 hover:text-white"
                   }`}
                 >
                   {label}
@@ -232,13 +223,13 @@ export default function DashboardPage() {
             aria-label="Mobile workspace navigation"
             className="flex gap-1 overflow-x-auto border-b border-white/[0.07] px-4 py-2 sm:hidden"
           >
-            {navigation.map(({ label, href }, index) => (
+            {navigation.map(({ label, href }) => (
               <Link
                 key={href}
                 href={href}
-                aria-current={index === 0 ? "page" : undefined}
+                aria-current={href === "/dashboard" ? "page" : undefined}
                 className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium ${
-                  index === 0 ? "bg-sky-400/10 text-sky-200" : "text-zinc-400 hover:text-white"
+                  href === "/dashboard" ? "bg-sky-400/10 text-sky-200" : "text-zinc-400 hover:text-white"
                 }`}
               >
                 {label}

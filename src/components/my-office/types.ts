@@ -1,5 +1,13 @@
 export type ConnectionState = "connected" | "reconnecting" | "disconnected";
-export type OfficePresence = "Working" | "Offline" | "Away" | "Break";
+export type OfficePresence =
+  | "Working"
+  | "Offline"
+  | "Away"
+  | "Break"
+  | "Meal Break"
+  | "Meeting"
+  | "Snoozed"
+  | "Do not disturb";
 
 export type OfficeParticipant = {
   id: string;
@@ -11,5 +19,6 @@ export type OfficeParticipant = {
   state: string;
   presence: OfficePresence;
   room?: string;
+  trackedToday?: string;
   isLocal?: boolean;
 };
