@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 type AuthFormMode = "login" | "signup" | "forgot-password";
@@ -51,12 +52,17 @@ function GoogleMark() {
 }
 
 export default function AuthForm({ mode }: { mode: AuthFormMode }) {
+  const router = useRouter();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [message, setMessage] = useState("");
   const formCopy = copy[mode];
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (mode === "signup") {
+      router.push("/setup-company");
+      return;
+    }
     setMessage(
       "Authentication isn’t connected yet. Connect an auth provider to enable this action.",
     );

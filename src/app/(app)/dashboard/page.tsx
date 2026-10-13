@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
+import CompanyName from "@/components/company-name";
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: "overview" },
@@ -176,7 +177,7 @@ export default function DashboardPage() {
                 NL
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">Northstar Studio</p>
+                <p className="truncate text-sm font-medium text-white"><CompanyName /></p>
                 <p className="text-xs text-zinc-500">Free workspace</p>
               </div>
             </div>
@@ -396,7 +397,7 @@ export default function DashboardPage() {
             </section>
 
             <footer className="mt-8 flex flex-col gap-3 border-t border-white/[0.06] pt-5 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
-              <span>Northstar Studio workspace</span>
+              <span><CompanyName /> workspace</span>
               <Link href="/settings" className="transition-colors hover:text-zinc-300">
                 Manage workspace
               </Link>

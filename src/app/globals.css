@@ -52,7 +52,22 @@ input[type="submit"]:not(:disabled) {
   will-change: opacity, transform;
 }
 
+@keyframes global-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.global-loader {
+  animation: global-loader-spin 900ms linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .toast-slide-in,
+  .global-loader {
+    animation-duration: 1800ms;
+  }
+
   .toast-slide-in {
     animation: none;
   }
