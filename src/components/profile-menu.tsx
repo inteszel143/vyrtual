@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import ProfileAvatar from "@/components/profile-avatar";
+import ProfilePhotoControl from "@/components/profile-photo-control";
 
 export default function ProfileMenu() {
   const [open, setOpen] = useState(false);
@@ -44,9 +46,7 @@ export default function ProfileMenu() {
         onClick={() => setOpen((isOpen) => !isOpen)}
         className="flex items-center gap-1.5 rounded-full p-0.5 text-zinc-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
       >
-        <span className="flex size-9 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-indigo-300 to-sky-300 text-xs font-semibold text-slate-950">
-          AM
-        </span>
+        <ProfileAvatar className="size-9" />
         <svg
           aria-hidden="true"
           viewBox="0 0 20 20"
@@ -63,16 +63,14 @@ export default function ProfileMenu() {
           className="absolute right-0 top-full z-50 mt-2 min-w-60 overflow-hidden rounded-xl border border-white/10 bg-[#15151c] p-1.5 shadow-xl shadow-black/40"
         >
           <div className="flex items-center gap-3 border-b border-white/[0.08] px-3 py-3">
-            <span
-              aria-hidden="true"
-              className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-indigo-300 to-sky-300 text-xs font-semibold text-slate-950"
-            >
-              AM
-            </span>
+            <ProfileAvatar className="size-10" />
             <span className="min-w-0">
               <span className="block truncate text-sm font-medium text-white">Alex Morgan</span>
               <span className="block truncate text-xs text-zinc-500">alex@northstar.example</span>
             </span>
+          </div>
+          <div className="border-b border-white/[0.08] px-3 py-2">
+            <ProfilePhotoControl compact />
           </div>
           <Link
             href="/settings"

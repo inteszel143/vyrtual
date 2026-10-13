@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { OfficeParticipant } from "./types";
+import ProfileAvatar from "@/components/profile-avatar";
 
 function VideoTile({
   participant,
@@ -16,6 +17,12 @@ function VideoTile({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isLocal = participant.isLocal === true;
+  const presenceEmoji = {
+    Working: "💻",
+    Offline: "⚫",
+    Away: "🌙",
+    Break: "☕",
+  }[participant.presence];
 
   useEffect(() => {
     const video = videoRef.current;
@@ -29,20 +36,29 @@ function VideoTile({
         <video ref={videoRef} autoPlay muted playsInline aria-label="Your local camera preview" className="absolute inset-0 size-full object-cover" />
       ) : (
         <div className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${participant.gradient} opacity-80`}>
-          <span className="flex size-16 items-center justify-center rounded-full border border-white/20 bg-black/20 text-lg font-semibold text-white shadow-xl">
-            {participant.initials}
-          </span>
+          {isLocal ? (
+            <ProfileAvatar initials={participant.initials} className="size-16 border-white/20 bg-black/20 text-lg text-white shadow-xl" />
+          ) : (
+            <span className="flex size-16 items-center justify-center rounded-full border border-white/20 bg-black/20 text-lg font-semibold text-white shadow-xl">
+              {participant.initials}
+            </span>
+          )}
         </div>
       )}
       {isLocal && !cameraEnabled && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#17171e]/80">
-          <span className={`flex size-16 items-center justify-center rounded-full bg-gradient-to-br ${participant.gradient} text-lg font-semibold text-white`}>
-            {participant.initials}
-          </span>
+          <ProfileAvatar initials={participant.initials} className={`size-16 border-transparent bg-gradient-to-br ${participant.gradient} text-lg text-white`} />
         </div>
       )}
       <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 bg-gradient-to-t from-black/80 via-black/45 to-transparent px-3 pb-3 pt-8">
-        <span className="min-w-0 truncate text-xs font-medium text-white">{participant.name}{isLocal ? " (You)" : ""}</span>
+        <span className="flex min-w-0 items-center gap-1.5 truncate text-xs font-medium text-white">
+          {participant.presence === "Working" ? (
+            <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-emerald-400 ring-2 ring-emerald-400/20" />
+          ) : (
+            <span aria-hidden="true">{presenceEmoji}</span>
+          )}
+          <span className="truncate">{participant.name}{isLocal ? " (You)" : ""}</span>
+        </span>
         <span className={`shrink-0 rounded-md px-2 py-1 text-[9px] ${isLocal && !microphoneEnabled ? "bg-rose-400/20 text-rose-100" : "bg-black/35 text-zinc-200"}`}>
           {isLocal ? (microphoneEnabled ? "Mic on" : "Muted") : participant.state}
         </span>

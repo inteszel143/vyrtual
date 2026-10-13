@@ -17,7 +17,6 @@ import {
 import type { OfficeParticipant } from "@/components/my-office/types";
 import { useToast } from "@/components/toast-provider";
 import { officePreviewParticipants } from "@/lib/office-preview";
-import Link from "next/link";
 
 export default function MyOfficePage() {
   const { notify } = useToast();
@@ -27,7 +26,9 @@ export default function MyOfficePage() {
     getPersonalWorkSessionServerSnapshot,
   );
   const joined = clockedInAt > 0;
-  const participants: OfficeParticipant[] = officePreviewParticipants;
+  const participants: OfficeParticipant[] = officePreviewParticipants.filter(
+    (person) => person.presence !== "Offline",
+  );
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -129,10 +130,6 @@ export default function MyOfficePage() {
   return (
     <PersonalWorkspaceShell activeHref="/my-office" title="My office" description="Join the same Work studio shown in your company’s virtual office.">
       <div className="space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-sky-300/10 bg-sky-300/[0.04] px-4 py-3">
-          <p className="text-xs leading-5 text-zinc-300">Preview roster matches the company office. Presence, coworker media, and invitations are sample data, not live synced.</p>
-          <Link href="/office" className="shrink-0 text-xs font-medium text-sky-200 transition-colors hover:text-sky-100">View company office →</Link>
-        </div>
         <OfficeHeader
           roomName="Work studio"
           onlineCount={participants.filter((person) => !person.isLocal || joined).length}

@@ -6,6 +6,7 @@ import WorkClockControl from "@/components/work-clock-control";
 import CompanyName from "@/components/company-name";
 import MessageButton from "@/components/message-button";
 import NotificationButton from "@/components/notification-button";
+import ProfileAvatar from "@/components/profile-avatar";
 
 const navigation = [
   { label: "My workspace", href: "/my-workspace", icon: "overview" },
@@ -84,7 +85,7 @@ export default function PersonalWorkspaceShell({
 
           <div className="mt-auto border-t border-white/[0.06] pt-5">
             <div className="flex items-center gap-3 rounded-xl px-2 py-2">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-300 to-orange-300 text-xs font-semibold text-slate-950">AM</div>
+              <ProfileAvatar className="size-9 rounded-xl" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-white">Alex Morgan</p>
                 <p className="text-xs text-zinc-500">Freelancer</p>

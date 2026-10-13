@@ -1,0 +1,33 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
+import {
+  getProfileImageServerSnapshot,
+  getProfileImageSnapshot,
+  subscribeToProfileImage,
+} from "@/lib/profile-image";
+
+export default function ProfileAvatar({
+  initials = "AM",
+  className = "",
+}: {
+  initials?: string;
+  className?: string;
+}) {
+  const image = useSyncExternalStore(
+    subscribeToProfileImage,
+    getProfileImageSnapshot,
+    getProfileImageServerSnapshot,
+  );
+
+  return (
+    <span
+      role="img"
+      aria-label="Profile photo"
+      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-indigo-300 to-sky-300 text-xs font-semibold text-slate-950 ${className}`}
+      style={image ? { backgroundImage: `url("${image}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+    >
+      {!image && initials}
+    </span>
+  );
+}

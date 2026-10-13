@@ -1,4 +1,6 @@
 import PersonalWorkspaceShell from "@/components/personal-workspace-shell";
+import ProfileAvatar from "@/components/profile-avatar";
+import ProfilePhotoControl from "@/components/profile-photo-control";
 
 export default function MyProfilePage() {
   return (
@@ -7,8 +9,8 @@ export default function MyProfilePage() {
         <div className="space-y-5">
           <section className="rounded-2xl border border-white/[0.07] bg-[#111116] p-5 sm:p-6">
             <div className="flex items-center gap-4 border-b border-white/[0.06] pb-5">
-              <span className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-300 to-orange-300 text-sm font-semibold text-slate-950">AM</span>
-              <div><h3 className="text-sm font-semibold">Personal information</h3><p className="mt-1 text-xs text-zinc-500">Your profile is visible to your workspace team.</p></div>
+              <ProfileAvatar className="size-14 rounded-2xl text-sm" />
+              <div><h3 className="text-sm font-semibold">Personal information</h3><p className="mt-1 text-xs text-zinc-500">Your profile is visible to your workspace team.</p><div className="mt-3"><ProfilePhotoControl /></div></div>
             </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {[["Full name", "Alex Morgan"], ["Email address", "alex@northstar.example"], ["Role", "Freelance product designer"], ["Workspace", "Northstar Studio"]].map(([label, value]) => <label key={label} className="block"><span className="mb-2 block text-xs font-medium text-zinc-400">{label}</span><input defaultValue={value} readOnly={label === "Workspace"} className="h-10 w-full rounded-xl border border-white/[0.08] bg-[#0d0d12] px-3 text-sm text-zinc-200 outline-none focus:border-sky-300/40 read-only:text-zinc-500" /></label>)}
