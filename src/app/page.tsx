@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import HeroHeadline from "@/components/hero-headline";
 import ScrollReveal from "@/components/scroll-reveal";
 
 const navigationLinks = [
@@ -223,9 +224,7 @@ export default function Home() {
         <p className="font-mono text-xs font-medium uppercase tracking-[0.22em] text-sky-300">
           A better way to work remotely
         </p>
-        <h1 className="mt-6 max-w-4xl text-5xl font-medium leading-[1.08] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-          Your office, wherever work happens.
-        </h1>
+        <HeroHeadline />
         <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-400 sm:text-lg sm:leading-8">
           Bring your remote team together. Manage employees and freelancers,
           track working hours, and see work progress—all in one virtual office.
