@@ -66,7 +66,7 @@ export default function SetupCompanyPage() {
             />
           </label>
           <p className="rounded-xl border border-amber-300/15 bg-amber-300/[0.05] px-4 py-3 text-xs leading-5 text-amber-100/80">
-            Setup preview only. Account creation and company data are not connected to a backend yet.
+            Company setup is a preview. Company details are saved in this browser only.
           </p>
           {error && <p role="alert" className="text-xs leading-5 text-rose-300">{error}</p>}
           <button

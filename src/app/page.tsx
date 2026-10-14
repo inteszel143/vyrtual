@@ -18,8 +18,8 @@ function NavigationLinks({ mobile = false }: { mobile?: boolean }) {
           href={href}
           className={
             mobile
-              ? "block rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
-              : "whitespace-nowrap px-2 py-3 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-400 transition-colors hover:text-white lg:px-4 lg:text-xs lg:tracking-[0.2em]"
+              ? "block rounded-lg px-4 py-3 text-sm font-normal text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+              : "whitespace-nowrap px-2 py-3 text-sm font-normal text-zinc-400 transition-colors hover:text-white lg:px-4"
           }
         >
           {label}
@@ -153,7 +153,7 @@ function TeamPortrait({
 
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#050507] font-sans text-white">
+    <main className="min-h-screen overflow-hidden bg-[#050507] text-white">
       <header className="fixed inset-x-0 top-0 z-50 mx-auto max-w-5xl px-4 pt-4 sm:px-6">
         <nav
           aria-label="Main navigation"
@@ -183,16 +183,16 @@ export default function Home() {
           <div className="hidden shrink-0 items-center gap-4 md:flex lg:gap-7">
             <Link
               href="/login"
-              className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-zinc-400 transition-colors hover:text-white"
+              className="text-sm font-normal text-zinc-400 transition-colors hover:text-white"
             >
               Sign in
             </Link>
-            <ActionLink href="/signup">Get started</ActionLink>
+            <Link href="/signup" className="inline-flex h-11 items-center justify-center rounded-full border border-white/20 bg-white/[0.04] px-6 text-sm font-normal text-white transition-colors hover:border-white/40 hover:bg-white/10">Get started</Link>
           </div>
 
           <div className="flex items-center gap-3 md:hidden">
             <details className="group relative">
-              <summary className="flex h-10 cursor-pointer list-none items-center rounded-full border border-white/15 px-4 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-200 [&::-webkit-details-marker]:hidden">
+              <summary className="flex h-10 cursor-pointer list-none items-center rounded-full border border-white/15 px-4 text-sm font-normal text-zinc-200 [&::-webkit-details-marker]:hidden">
                 Menu
               </summary>
               <div className="absolute right-0 top-12 z-10 w-56 rounded-2xl border border-white/10 bg-[#111115] p-2 shadow-xl">
@@ -200,7 +200,7 @@ export default function Home() {
                 <div className="my-2 border-t border-white/10" />
                 <Link
                   href="/login"
-                  className="block rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+                  className="block rounded-lg px-4 py-3 text-sm font-normal text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
                 >
                   Sign in
                 </Link>
@@ -208,7 +208,7 @@ export default function Home() {
             </details>
             <Link
               href="/signup"
-              className="inline-flex h-10 items-center justify-center rounded-full border border-white/20 bg-white/[0.04] px-4 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-white transition-colors hover:bg-white/10"
+              className="inline-flex h-10 items-center justify-center rounded-full border border-white/20 bg-white/[0.04] px-4 text-sm font-normal text-white transition-colors hover:bg-white/10"
             >
               Start
             </Link>

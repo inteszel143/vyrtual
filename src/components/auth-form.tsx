@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { createClient } from "@/lib/supabase/client";
+import LoadingScreen from "@/components/loading-screen";
 
 type AuthFormMode = "login" | "signup" | "forgot-password";
 
@@ -55,12 +57,117 @@ export default function AuthForm({ mode }: { mode: AuthFormMode }) {
   const router = useRouter();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [message, setMessage] = useState("");
+  const [googlePending, setGooglePending] = useState(false);
+  const [signupPending, setSignupPending] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
+  const [loginPending, setLoginPending] = useState(false);
+  const pending = googlePending || signupPending || loginPending;
   const formCopy = copy[mode];
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleGoogleSignIn() {
+    if (pending) return;
+    setMessage("");
+    setGooglePending(true);
+    try {
+      const callback = new URL("/auth/callback", window.location.origin);
+      if (mode === "signup") callback.searchParams.set("flow", "signup");
+      const { data, error } = await createClient().auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: callback.toString(),
+          skipBrowserRedirect: true,
+        },
+      });
+      if (error || !data.url) throw new Error("Google sign-in could not start.");
+      window.location.assign(data.url);
+    } catch {
+      setMessage("Could not connect to Google sign-in. Please try again.");
+      setGooglePending(false);
+    }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending) return;
+    if (mode === "login") {
+      const values = new FormData(event.currentTarget);
+      const email = String(values.get("email") ?? "").trim();
+      const password = String(values.get("password") ?? "");
+      if (!email || !password) {
+        setMessage("Enter your email and password to sign in.");
+        return;
+      }
+
+      setMessage("");
+      setLoginPending(true);
+      try {
+        const { data, error } = await createClient().auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error || !data.session) {
+          setMessage(
+            error?.code === "email_not_confirmed"
+              ? "Please confirm your email using the link in your inbox before signing in."
+              : error?.code === "invalid_credentials"
+                ? "The email or password is incorrect. Please try again."
+                : error?.status === 429
+                  ? "Too many sign-in attempts. Please wait a moment and try again."
+                  : "Could not sign in. Please try again.",
+          );
+          setLoginPending(false);
+          return;
+        }
+        router.replace("/dashboard");
+        router.refresh();
+      } catch {
+        setMessage("Could not sign in. Check your connection and try again.");
+        setLoginPending(false);
+      }
+      return;
+    }
     if (mode === "signup") {
-      router.push("/setup-company");
+      const form = event.currentTarget;
+      const values = new FormData(form);
+      const name = String(values.get("name") ?? "").trim();
+      const email = String(values.get("email") ?? "").trim();
+      const password = String(values.get("password") ?? "");
+      setConfirmationSent(false);
+      if (!name || !email || password.length < 8 || !values.get("terms")) {
+        setMessage("Enter your name, email, a password of at least 8 characters, and accept the terms.");
+        return;
+      }
+
+      setMessage("");
+      setSignupPending(true);
+      try {
+        const callback = new URL("/auth/callback", window.location.origin);
+        callback.searchParams.set("flow", "signup");
+        const { data, error } = await createClient().auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: name },
+            emailRedirectTo: callback.toString(),
+          },
+        });
+        if (error) {
+          setMessage(error.message);
+          setSignupPending(false);
+          return;
+        }
+        form.reset();
+        if (data.session) {
+          router.replace("/setup-company");
+          return;
+        }
+        setConfirmationSent(true);
+        setMessage("Check your inbox for a confirmation link, then open it in this browser to continue. If you already have an account, sign in instead.");
+        setSignupPending(false);
+      } catch {
+        setMessage("Could not create your account. Check your connection and try again.");
+        setSignupPending(false);
+      }
       return;
     }
     setMessage(
@@ -70,6 +177,7 @@ export default function AuthForm({ mode }: { mode: AuthFormMode }) {
 
   return (
     <div>
+      {pending && <LoadingScreen />}
       <div className="text-center">
         <h1 className="text-4xl tracking-[-0.035em] sm:text-[42px]">
           {formCopy.title}
@@ -135,7 +243,7 @@ export default function AuthForm({ mode }: { mode: AuthFormMode }) {
                   mode === "login" ? "current-password" : "new-password"
                 }
                 placeholder="Enter your password"
-                minLength={8}
+                minLength={mode === "signup" ? 8 : undefined}
                 required
                 className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 pr-12 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-violet-400/70 focus:bg-white/[0.06] focus:ring-4 focus:ring-violet-400/10"
               />
@@ -172,14 +280,7 @@ export default function AuthForm({ mode }: { mode: AuthFormMode }) {
 
         {mode === "login" && (
           <div className="flex items-center justify-between gap-4 pt-1 text-xs">
-            <label className="flex items-center gap-2 text-zinc-400">
-              <input
-                type="checkbox"
-                name="remember"
-                className="size-4 rounded border-white/20 accent-violet-400"
-              />
-              Remember me
-            </label>
+            <span className="text-zinc-400">Stay signed in on this browser</span>
             <Link
               href="/forgot-password"
               className="font-medium text-zinc-200 hover:underline"
@@ -203,13 +304,15 @@ export default function AuthForm({ mode }: { mode: AuthFormMode }) {
 
         <button
           type="submit"
+          disabled={pending}
+          aria-busy={signupPending || loginPending}
           className="flex h-12 w-full items-center justify-center rounded-full bg-white px-5 text-sm font-medium text-zinc-950 transition hover:bg-zinc-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
         >
-          {formCopy.button}
+          {signupPending ? "Creating account…" : loginPending ? "Signing in…" : formCopy.button}
         </button>
       </form>
 
-      {mode === "login" && (
+      {mode !== "forgot-password" && (
         <>
           <div className="my-5 flex items-center gap-3">
             <span className="h-px flex-1 bg-white/10" />
@@ -220,23 +323,27 @@ export default function AuthForm({ mode }: { mode: AuthFormMode }) {
           </div>
           <button
             type="button"
-            onClick={() =>
-              setMessage(
-                "Google sign-in isn’t connected yet. Connect an auth provider to enable this action.",
-              )
-            }
-            className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-white/10 bg-white/[0.04] text-sm font-medium text-zinc-200 transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/10"
+            onClick={handleGoogleSignIn}
+            disabled={pending}
+            aria-busy={googlePending}
+            className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-white/10 bg-white/[0.04] text-sm font-medium text-zinc-200 transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/10 disabled:cursor-wait disabled:opacity-60"
           >
             <GoogleMark />
-            Continue with Google
+            {googlePending ? "Connecting to Google…" : "Continue with Google"}
           </button>
+          {mode === "signup" && (
+            <p className="mt-3 text-center text-xs leading-5 text-zinc-400">
+              By continuing with Google, you agree to the terms of service and
+              privacy policy.
+            </p>
+          )}
         </>
       )}
 
       {message && (
         <p
           role="status"
-          className="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.08] px-4 py-3 text-xs leading-5 text-amber-200"
+          className={`mt-4 rounded-xl border px-4 py-3 text-xs leading-5 ${confirmationSent ? "border-emerald-300/20 bg-emerald-300/[0.08] text-emerald-200" : "border-amber-300/20 bg-amber-300/[0.08] text-amber-200"}`}
         >
           {message}
         </p>
