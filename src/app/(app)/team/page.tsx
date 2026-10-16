@@ -10,7 +10,8 @@ import {
   ownerManageNavigation,
   ownerWorkspaceNavigation as navigation,
 } from "@/components/owner-navigation";
-import { useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { getCompanyNameSnapshot, getCompanyNameServerSnapshot, subscribeToCompanyName } from "@/lib/company-workspace";
 import { useToast } from "@/components/toast-provider";
 
 type Member = {
@@ -26,18 +27,7 @@ type Member = {
   hours: string;
 };
 
-const initialMembers: Member[] = [
-  { id: "avery-chen", name: "Avery Chen", email: "avery.chen@northstar.example", role: "Product designer", type: "Employee", status: "Working", location: "Work studio", initials: "AC", color: "bg-violet-400/20 text-violet-200", hours: "32.5h" },
-  { id: "jordan-lee", name: "Jordan Lee", email: "jordan.lee@northstar.example", role: "Frontend developer", type: "Employee", status: "Online", location: "Work studio", initials: "JL", color: "bg-sky-400/20 text-sky-200", hours: "28h" },
-  { id: "sam-rivera", name: "Sam Rivera", email: "sam.rivera@northstar.example", role: "Content writer", type: "Freelancer", status: "Working", location: "Meeting room", initials: "SR", color: "bg-rose-400/20 text-rose-200", hours: "18.5h" },
-  { id: "morgan-park", name: "Morgan Park", email: "morgan.park@northstar.example", role: "Project lead", type: "Employee", status: "Online", location: "Meeting room", initials: "MP", color: "bg-emerald-400/20 text-emerald-200", hours: "34h" },
-  { id: "taylor-brooks", name: "Taylor Brooks", email: "taylor.brooks@northstar.example", role: "Software engineer", type: "Employee", status: "Away", location: "Focus room", initials: "TB", color: "bg-amber-400/20 text-amber-200", hours: "30h" },
-  { id: "casey-kim", name: "Casey Kim", email: "casey.kim@northstar.example", role: "Data analyst", type: "Freelancer", status: "Offline", location: "—", initials: "CK", color: "bg-indigo-400/20 text-indigo-200", hours: "16h" },
-  { id: "riley-morgan", name: "Riley Morgan", email: "riley.morgan@northstar.example", role: "UX researcher", type: "Employee", status: "Working", location: "Work studio", initials: "RM", color: "bg-pink-400/20 text-pink-200", hours: "26h" },
-  { id: "jamie-patel", name: "Jamie Patel", email: "jamie.patel@northstar.example", role: "Illustrator", type: "Freelancer", status: "Offline", location: "—", initials: "JP", color: "bg-orange-400/20 text-orange-200", hours: "12.5h" },
-];
-
-const statusFilters = ["Everyone", "Working", "Online", "Away", "Offline", "Invited"] as const;
+const statusFilters = ["Everyone", "Joined", "Invited"] as const;
 type StatusFilter = (typeof statusFilters)[number];
 type MemberTypeFilter = "Everyone" | "Employees" | "Freelancers";
 
@@ -99,12 +89,43 @@ export default function TeamPage() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Everyone");
   const [memberType, setMemberType] = useState<MemberTypeFilter>("Everyone");
-  const [teamMembers, setTeamMembers] = useState(initialMembers);
+  const [teamMembers, setTeamMembers] = useState<Member[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("");
   const [inviteType, setInviteType] = useState<Member["type"]>("Employee");
+
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [inviteError, setInviteError] = useState("");
+  const [sending, setSending] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const companyName = useSyncExternalStore(subscribeToCompanyName, getCompanyNameSnapshot, getCompanyNameServerSnapshot) || "My workspace";
+
+  const loadTeam = useCallback(() => fetch("/api/team/invitations", { cache: "no-store" }).then(async (response) => {
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      setLoadError("");
+      setTeamMembers(result.invitations.map((invite: {
+        id: string; full_name: string; email: string; job_title: string;
+        member_type: Member["type"]; accepted_at: string | null; expires_at: string;
+      }) => ({
+        id: invite.id, name: invite.full_name, email: invite.email, role: invite.job_title,
+        type: invite.member_type, status: invite.accepted_at ? "Joined" : "Invited",
+        location: invite.accepted_at ? "Invitation accepted" : new Date(invite.expires_at) <= new Date() ? "Invitation expired" : "Awaiting acceptance",
+        initials: invite.full_name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase(),
+        color: "bg-sky-400/20 text-sky-200", hours: "—",
+      })));
+    }).catch((error: unknown) => {
+      setLoadError(error instanceof Error ? error.message : "Could not load your team. Please try again.");
+    }).finally(() => setLoading(false)), []);
+
+  useEffect(() => { void loadTeam(); }, [loadTeam]);
+  useEffect(() => {
+    if (inviteOpen) dialogRef.current?.showModal();
+    else dialogRef.current?.close();
+  }, [inviteOpen]);
 
   const filteredMembers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -125,61 +146,32 @@ export default function TeamPage() {
     });
   }, [memberType, query, statusFilter, teamMembers]);
 
-  function inviteMember(event: FormEvent<HTMLFormElement>) {
+  async function inviteMember(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const normalizedEmail = inviteEmail.trim().toLowerCase();
-    if (teamMembers.some((member) => member.email.toLowerCase() === normalizedEmail)) {
-      notify({ kind: "warning", title: "This email is already on the team", message: normalizedEmail });
+    if (sending) return;
+    setInviteError("");
+    if (!inviteName.trim() || !inviteRole.trim()) {
+      setInviteError("Enter a full name and job title.");
       return;
     }
-
-    const fullName = inviteName.trim();
-    const initials = fullName
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0].toUpperCase())
-      .join("");
-    const invitee: Member = {
-      id: `invite-${normalizedEmail.replace(/[^a-z0-9]+/g, "-")}`,
-      name: fullName,
-      email: normalizedEmail,
-      role: inviteRole.trim(),
-      type: inviteType,
-      status: "Invited",
-      location: "Invitation pending",
-      initials,
-      color: "bg-sky-400/20 text-sky-200",
-      hours: "—",
-    };
-    setTeamMembers((current) => [invitee, ...current]);
-    setStatusFilter("Everyone");
-    setMemberType("Everyone");
-    setQuery("");
-
-    const body = [
-      `Hi ${fullName},`,
-      "",
-      `You’ve been invited to join Northstar Studio on Vyrtual as a ${inviteType.toLowerCase()}${inviteRole.trim() ? ` (${inviteRole.trim()})` : ""}.`,
-      "",
-      "Please reply to this email to coordinate access. This preview does not yet generate an account invitation link.",
-    ].join("\n");
-    const mailto = `mailto:${encodeURIComponent(normalizedEmail)}?${new URLSearchParams({
-      subject: "You’re invited to join Northstar Studio on Vyrtual",
-      body,
-    }).toString()}`;
-
-    setInviteOpen(false);
-    setInviteName("");
-    setInviteEmail("");
-    setInviteRole("");
-    setInviteType("Employee");
-    notify({
-      kind: "success",
-      title: "Invitation prepared",
-      message: "The person was added as pending. Send the prepared email to invite them.",
-    });
-    window.location.href = mailto;
+    setSending(true);
+    try {
+      const response = await fetch("/api/team/invitations", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: inviteName.trim(), email: inviteEmail.trim().toLowerCase(), role: inviteRole.trim(), type: inviteType, companyName }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      setInviteOpen(false);
+      setInviteName(""); setInviteEmail(""); setInviteRole(""); setInviteType("Employee");
+      setStatusFilter("Everyone"); setMemberType("Everyone"); setQuery("");
+      notify({ kind: "success", title: "Invitation email sent", message: "Your teammate can sign in from their email and accept the invitation." });
+    } catch (error) {
+      setInviteError(error instanceof Error ? error.message : "Could not send the invitation. Please try again.");
+    } finally {
+      setSending(false);
+      await loadTeam();
+    }
   }
 
   return (
@@ -230,7 +222,7 @@ export default function TeamPage() {
             <div className="flex items-center gap-3">
               <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-300 to-indigo-400 text-xs font-semibold text-slate-950">NL</div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">Northstar Studio</p>
+                <p className="truncate text-sm font-medium text-white">{companyName}</p>
                 <p className="text-xs text-zinc-500">Free workspace</p>
               </div>
             </div>
@@ -298,12 +290,12 @@ export default function TeamPage() {
           <div className="mx-auto max-w-[1280px] px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
             <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
               <div>
-                <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-sky-300">Northstar Studio · People</p>
+                <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-sky-300">{companyName} · People</p>
                 <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] sm:text-[34px]">Your team</h1>
                 <p className="mt-2 text-sm text-zinc-400">Get to know the people behind the work.</p>
               </div>
               <div className="flex flex-wrap gap-2 self-start sm:self-auto">
-                <button type="button" onClick={() => setInviteOpen(true)} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-300 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-sky-200">
+                <button type="button" onClick={() => { setInviteError(""); setInviteOpen(true); }} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-300 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-sky-200">
                   <span aria-hidden="true" className="text-lg leading-none">+</span>
                   Invite teammate
                 </button>
@@ -321,22 +313,22 @@ export default function TeamPage() {
               <article className="rounded-2xl border border-white/[0.07] bg-[#111116] p-4 sm:p-5">
                 <p className="text-xs text-zinc-500">Team members</p>
                 <div className="mt-3 flex items-end justify-between">
-                  <span className="text-2xl font-semibold tracking-tight">{18 + teamMembers.filter((member) => member.status === "Invited").length}</span>
+                  <span className="text-2xl font-semibold tracking-tight">{teamMembers.length}</span>
                   <span className="text-xs text-zinc-500">Including pending invites</span>
                 </div>
               </article>
               <article className="rounded-2xl border border-white/[0.07] bg-[#111116] p-4 sm:p-5">
                 <p className="text-xs text-zinc-500">Employees</p>
                 <div className="mt-3 flex items-end justify-between">
-                  <span className="text-2xl font-semibold tracking-tight">12</span>
-                  <span className="flex items-center gap-1.5 text-xs text-emerald-300"><span className="size-1.5 rounded-full bg-emerald-300" />5 working now</span>
+                  <span className="text-2xl font-semibold tracking-tight">{teamMembers.filter((member) => member.type === "Employee").length}</span>
+                  <span className="flex items-center gap-1.5 text-xs text-emerald-300"><span className="size-1.5 rounded-full bg-emerald-300" />Employees and pending invites</span>
                 </div>
               </article>
               <article className="rounded-2xl border border-white/[0.07] bg-[#111116] p-4 sm:p-5">
                 <p className="text-xs text-zinc-500">Freelancers</p>
                 <div className="mt-3 flex items-end justify-between">
-                  <span className="text-2xl font-semibold tracking-tight">6</span>
-                  <span className="text-xs text-zinc-500">Across 3 specialties</span>
+                  <span className="text-2xl font-semibold tracking-tight">{teamMembers.filter((member) => member.type === "Freelancer").length}</span>
+                  <span className="text-xs text-zinc-500">Freelancers and pending invites</span>
                 </div>
               </article>
             </section>
@@ -348,7 +340,7 @@ export default function TeamPage() {
                     <h2 className="text-base font-semibold text-white">All members</h2>
                     <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 text-[10px] text-zinc-400">{filteredMembers.length}</span>
                   </div>
-                  <p className="mt-1 text-xs text-zinc-500">Sample team directory · 8 preview profiles</p>
+                  <p className="mt-1 text-xs text-zinc-500">Your teammates and pending invitations</p>
                 </div>
                 <label className="relative block w-full sm:max-w-[280px]">
                   <span className="sr-only">Search team members</span>
@@ -403,7 +395,8 @@ export default function TeamPage() {
                 </label>
               </div>
 
-              {filteredMembers.length > 0 ? (
+              {loadError && <div role="alert" className="mt-4 rounded-xl border border-rose-300/20 p-4 text-sm text-rose-200">{loadError} <button type="button" onClick={() => { setLoading(true); void loadTeam(); }} className="underline">Retry</button></div>}
+              {loading ? <p role="status" className="py-12 text-center text-sm text-zinc-400">Loading your team…</p> : loadError ? null : filteredMembers.length > 0 ? (
                 <div className="mt-3 grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
                   {filteredMembers.map((member) => (
                     <article key={member.email} className="rounded-2xl border border-white/[0.07] bg-[#111116] p-4 transition-colors hover:border-white/[0.12] sm:p-5">
@@ -447,11 +440,11 @@ export default function TeamPage() {
                         </span>
                         <span className="shrink-0 text-[11px] text-zinc-400">{member.hours} this week</span>
                         {member.status === "Invited" ? (
-                          <span className="shrink-0 text-[11px] font-medium text-sky-200">Pending invite</span>
+                          <button type="button" onClick={() => {
+                            setInviteName(member.name); setInviteEmail(member.email); setInviteRole(member.role); setInviteType(member.type); setInviteError(""); setInviteOpen(true);
+                          }} className="shrink-0 text-[11px] font-medium text-sky-200 hover:text-white">Resend invite</button>
                         ) : (
-                          <Link href={`/team/${member.id}`} className="shrink-0 text-[11px] font-medium text-sky-200 transition-colors hover:text-white">
-                            View profile
-                          </Link>
+                          <span className="shrink-0 text-[11px] text-emerald-300">Joined</span>
                         )}
                       </div>
                     </article>
@@ -462,8 +455,8 @@ export default function TeamPage() {
                   <div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-white/[0.04] text-zinc-400">
                     <Icon name="search" />
                   </div>
-                  <h3 className="mt-4 text-sm font-semibold text-white">No matching teammates</h3>
-                  <p className="mt-1 text-xs text-zinc-500">Try another name or change your filters.</p>
+                  <h3 className="mt-4 text-sm font-semibold text-white">{teamMembers.length ? "No matching teammates" : "Invite your first teammate"}</h3>
+                  <p className="mt-1 text-xs text-zinc-500">{teamMembers.length ? "Try another name or change your filters." : "Send an invitation to bring your team into the workspace."}</p>
                   <button
                     type="button"
                     onClick={() => {
@@ -480,34 +473,33 @@ export default function TeamPage() {
             </section>
 
             <footer className="mt-8 flex flex-col gap-3 border-t border-white/[0.06] pt-5 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
-              <span>Northstar Studio workspace · Sample team data</span>
+              <span>{companyName} workspace · Team directory</span>
               <Link href="/office" className="transition-colors hover:text-zinc-300">Open virtual office</Link>
             </footer>
           </div>
         </div>
       </div>
-      {inviteOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setInviteOpen(false);
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="invite-team-title"
-            className="w-full max-w-lg rounded-2xl border border-white/[0.1] bg-[#111116] p-5 shadow-2xl shadow-black/50 sm:p-6"
-          >
+      <dialog
+        ref={dialogRef}
+        aria-labelledby="invite-team-title"
+        onCancel={(event) => { if (sending) event.preventDefault(); else setInviteOpen(false); }}
+        onClose={() => setInviteOpen(false)}
+        onClick={(event) => { if (!sending && event.target === event.currentTarget) {
+          const bounds = event.currentTarget.getBoundingClientRect();
+          if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) setInviteOpen(false);
+        } }}
+        className="fixed inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%_-_2rem)] max-w-lg overflow-y-auto rounded-2xl border border-white/[0.1] bg-[#111116] p-5 text-white shadow-2xl shadow-black/50 backdrop:bg-black/70 backdrop:backdrop-blur-sm sm:p-6"
+      >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-sky-300">Northstar Studio</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-sky-300">{companyName}</p>
                 <h2 id="invite-team-title" className="mt-2 text-lg font-semibold">Invite a teammate</h2>
-                <p className="mt-1 text-xs leading-5 text-zinc-400">Add their personal details and prepare an invitation email.</p>
+                <p className="mt-1 text-xs leading-5 text-zinc-400">Send a secure email link so they can sign in and join your workspace.</p>
               </div>
-              <button type="button" aria-label="Close invitation form" onClick={() => setInviteOpen(false)} className="flex size-8 shrink-0 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white">×</button>
+              <button type="button" aria-label="Close invitation form" disabled={sending} onClick={() => setInviteOpen(false)} className="flex size-8 shrink-0 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white">×</button>
             </div>
             <form onSubmit={inviteMember} className="mt-5 space-y-4">
+              <fieldset disabled={sending} className="space-y-4">
               <label className="block">
                 <span className="mb-2 block text-xs font-medium text-zinc-300">Full name</span>
                 <input autoFocus required maxLength={100} value={inviteName} onChange={(event) => setInviteName(event.target.value)} placeholder="e.g. Jamie Rivera" className="h-11 w-full rounded-xl border border-white/[0.09] bg-[#0d0d12] px-3.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-sky-300/40" />
@@ -530,16 +522,16 @@ export default function TeamPage() {
                 </label>
               </div>
               <p className="rounded-xl border border-amber-300/10 bg-amber-300/[0.04] px-3.5 py-3 text-[11px] leading-5 text-zinc-400">
-                This preview adds them as pending and opens a prefilled email draft. Sending account invitations requires a connected email and invite service.
+                Invitations expire after 7 days. The recipient must use this email address to join. If their sign-in link expires sooner, resend the invitation.
               </p>
+              {inviteError && <p role="alert" className="text-sm text-rose-300">{inviteError}</p>}
               <div className="flex justify-end gap-2 pt-1">
-                <button type="button" onClick={() => setInviteOpen(false)} className="h-10 rounded-xl border border-white/[0.08] px-4 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.05]">Cancel</button>
-                <button type="submit" className="h-10 rounded-xl bg-sky-300 px-4 text-xs font-semibold text-slate-950 transition-colors hover:bg-sky-200">Prepare email invite</button>
+                <button type="button" disabled={sending} onClick={() => setInviteOpen(false)} className="h-10 rounded-xl border border-white/[0.08] px-4 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.05]">Cancel</button>
+                <button type="submit" className="h-10 rounded-xl bg-sky-300 px-4 text-xs font-semibold text-slate-950 transition-colors hover:bg-sky-200" disabled={sending} aria-busy={sending}>{sending ? "Sending invitation…" : "Send invitation"}</button>
               </div>
+              </fieldset>
             </form>
-          </section>
-        </div>
-      )}
+      </dialog>
     </main>
   );
 }

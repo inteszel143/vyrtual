@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemberProfile } from "@/components/member-profile-provider";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ProfileAvatar from "@/components/profile-avatar";
@@ -10,6 +11,7 @@ import { useToast } from "@/components/toast-provider";
 import { createPortal } from "react-dom";
 
 export default function ProfileMenu() {
+  const profile = useMemberProfile();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const logoutInFlight = useRef(false);
@@ -95,15 +97,15 @@ export default function ProfileMenu() {
           <div className="flex items-center gap-3 border-b border-white/[0.08] px-3 py-3">
             <ProfileAvatar className="size-10" />
             <span className="min-w-0">
-              <span className="block truncate text-sm font-medium text-white">Alex Morgan</span>
-              <span className="block truncate text-xs text-zinc-500">alex@northstar.example</span>
+              <span className="block truncate text-sm font-medium text-white">{profile?.name ?? "Alex Morgan"}</span>
+              <span className="block truncate text-xs text-zinc-500">{profile ? profile.user?.email ?? "" : "alex@northstar.example"}</span>
             </span>
           </div>
           <div className="border-b border-white/[0.08] px-3 py-2">
-            <ProfilePhotoControl compact />
+            {profile ? <Link href="/my-profile" onClick={() => setOpen(false)} className="text-xs text-sky-200">Edit profile and photo</Link> : <ProfilePhotoControl compact />}
           </div>
           <Link
-            href="/settings"
+            href={profile ? "/my-profile" : "/settings"}
             role="menuitem"
             onClick={() => setOpen(false)}
             className="block rounded-lg px-3 py-2.5 text-sm text-zinc-200 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:bg-white/[0.06] focus-visible:outline-none"

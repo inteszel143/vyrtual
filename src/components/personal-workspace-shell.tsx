@@ -1,3 +1,6 @@
+"use client";
+
+import MemberProfileProvider, { useMemberProfile } from "@/components/member-profile-provider";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -34,7 +37,13 @@ function Icon({ name }: { name: string }) {
   );
 }
 
-export default function PersonalWorkspaceShell({
+type ShellProps = { activeHref: string; title: string; description: string; children: ReactNode };
+
+export default function PersonalWorkspaceShell(props: ShellProps) {
+  return <MemberProfileProvider><WorkspaceContent {...props} /></MemberProfileProvider>;
+}
+
+function WorkspaceContent({
   activeHref,
   title,
   description,
@@ -45,6 +54,7 @@ export default function PersonalWorkspaceShell({
   description: string;
   children: ReactNode;
 }) {
+  const profile = useMemberProfile()!;
   return (
     <main className="min-h-screen bg-[#09090d] text-white">
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
@@ -87,8 +97,8 @@ export default function PersonalWorkspaceShell({
             <div className="flex items-center gap-3 rounded-xl px-2 py-2">
               <ProfileAvatar className="size-9 rounded-xl" />
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">Alex Morgan</p>
-                <p className="text-xs text-zinc-500">Freelancer</p>
+                <p className="truncate text-sm font-medium text-white">{profile.loading ? "Loading…" : profile.name}</p>
+                <p className="text-xs text-zinc-500">{profile.membership?.member_type ?? "Personal account"}</p>
               </div>
             </div>
             <Link href="/dashboard" className="mt-3 flex items-center gap-2 rounded-lg px-2 py-2 text-xs text-zinc-500 transition-colors hover:bg-white/[0.04] hover:text-zinc-200">
@@ -105,7 +115,7 @@ export default function PersonalWorkspaceShell({
             </div>
             <div className="flex items-center gap-3">
               <WorkClockControl />
-              <span className="hidden items-center gap-1.5 rounded-full border border-sky-300/15 bg-sky-300/[0.06] px-2.5 py-1 text-[10px] font-medium text-sky-200 sm:inline-flex"><span aria-hidden="true" className="size-1.5 rounded-full bg-sky-300" />Freelancer workspace</span>
+              <span className="hidden items-center gap-1.5 rounded-full border border-sky-300/15 bg-sky-300/[0.06] px-2.5 py-1 text-[10px] font-medium text-sky-200 sm:inline-flex"><span aria-hidden="true" className="size-1.5 rounded-full bg-sky-300" />{profile.membership?.member_type ?? "Personal"} workspace</span>
               <NotificationButton />
               <MessageButton href="/my-messages" />
               <ProfileMenu />
@@ -124,9 +134,11 @@ export default function PersonalWorkspaceShell({
               <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] sm:text-[34px]">{title}</h2>
               <p className="mt-2 text-sm text-zinc-400">{description}</p>
             </div>
+            {profile.error && <p role="alert" className="mb-5 rounded-xl border border-rose-300/20 p-4 text-sm text-rose-200">{profile.error} <button type="button" className="underline" onClick={() => { void profile.refresh().catch(() => {}); }}>Retry</button></p>}
+            {profile.memberships.length > 1 && <label className="mb-5 block text-xs text-zinc-400">Company<select className="ml-3 rounded-lg bg-[#15151c] p-2 text-white" value={profile.membership?.workspace_id} onChange={(event) => profile.selectWorkspace(event.target.value)}>{profile.memberships.map((membership) => <option key={membership.workspace_id} value={membership.workspace_id}>{membership.company_name}</option>)}</select></label>}
             {children}
             <footer className="mt-10 border-t border-white/[0.06] pt-5 text-xs text-zinc-600">
-              Personal workspace preview · Changes are not saved
+              Profile details are saved to your account · Work summaries are previews
             </footer>
           </div>
         </div>

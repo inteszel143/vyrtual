@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemberProfile } from "@/components/member-profile-provider";
 import { useSyncExternalStore } from "react";
 import {
   getProfileImageServerSnapshot,
@@ -14,12 +15,15 @@ export default function ProfileAvatar({
   initials?: string;
   className?: string;
 }) {
-  const image = useSyncExternalStore(
+  const profile = useMemberProfile();
+  const localImage = useSyncExternalStore(
     subscribeToProfileImage,
     getProfileImageSnapshot,
     getProfileImageServerSnapshot,
   );
 
+  const image = profile ? profile.photo : localImage;
+  const displayInitials = profile ? profile.name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("") : initials;
   return (
     <span
       role="img"
@@ -27,7 +31,7 @@ export default function ProfileAvatar({
       className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-indigo-300 to-sky-300 text-xs font-semibold text-slate-950 ${className}`}
       style={image ? { backgroundImage: `url("${image}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
     >
-      {!image && initials}
+      {!image && displayInitials}
     </span>
   );
 }
