@@ -1,5 +1,6 @@
 "use client";
 
+import AvatarImage from "@/components/avatar-image";
 import { useMemberProfile } from "@/components/member-profile-provider";
 import { useSyncExternalStore } from "react";
 import {
@@ -29,9 +30,8 @@ export default function ProfileAvatar({
       role="img"
       aria-label="Profile photo"
       className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-indigo-300 to-sky-300 text-xs font-semibold text-slate-950 ${className}`}
-      style={image ? { backgroundImage: `url("${image}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
     >
-      {!image && displayInitials}
+      <AvatarImage src={image} initials={displayInitials} />
     </span>
   );
 }

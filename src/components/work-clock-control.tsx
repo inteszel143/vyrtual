@@ -3,6 +3,11 @@
 import { useEffect, useSyncExternalStore, useState } from "react";
 import { useToast } from "@/components/toast-provider";
 import {
+  getPersonalWorkStatusSnapshot,
+  getPersonalWorkStatusServerSnapshot,
+  getPersonalWorkBusySnapshot,
+  getPersonalWorkBusyServerSnapshot,
+  refreshPersonalWorkSession,
   getPersonalWorkSessionServerSnapshot,
   getPersonalWorkSessionSnapshot,
   subscribeToPersonalWorkSession,
@@ -25,6 +30,8 @@ export default function WorkClockControl() {
     getPersonalWorkSessionSnapshot,
     getPersonalWorkSessionServerSnapshot,
   );
+  const syncStatus = useSyncExternalStore(subscribeToPersonalWorkSession, getPersonalWorkStatusSnapshot, getPersonalWorkStatusServerSnapshot);
+  const busy = useSyncExternalStore(subscribeToPersonalWorkSession, getPersonalWorkBusySnapshot, getPersonalWorkBusyServerSnapshot);
   const [now, setNow] = useState(0);
   const [storageError, setStorageError] = useState("");
 
@@ -35,16 +42,16 @@ export default function WorkClockControl() {
 
   const clockedIn = startedAt > 0;
 
-  const toggleClock = () => {
+  const toggleClock = async () => {
     setStorageError("");
     try {
-      if (clockedIn) timeOutOfPersonalWorkSession();
-      else timeInToPersonalWorkSession();
+      if (clockedIn) await timeOutOfPersonalWorkSession();
+      else await timeInToPersonalWorkSession();
       notify(clockedIn
         ? { kind: "info", title: "Timed out", message: "Your office presence has ended." }
         : { kind: "success", title: "Timed in", message: "You’re now listed in your virtual office." });
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "Browser storage is unavailable.";
+      const detail = error instanceof Error ? error.message : "Could not reach the time tracking service.";
       setStorageError(`Could not update your time clock: ${detail}`);
       notify({ kind: "error", title: "Time clock couldn’t be updated", message: detail });
     }
@@ -61,6 +68,8 @@ export default function WorkClockControl() {
         <button
           type="button"
           onClick={toggleClock}
+          disabled={busy || !!syncStatus}
+          aria-busy={busy}
           aria-pressed={clockedIn}
           className={`inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-xs font-semibold transition-colors ${
             clockedIn
@@ -69,9 +78,10 @@ export default function WorkClockControl() {
           }`}
         >
           <span className={`size-1.5 rounded-full ${clockedIn ? "bg-rose-300" : "bg-emerald-300"}`} />
-          {clockedIn ? "Time out" : "Time in"}
+          {busy ? "Saving…" : clockedIn ? "Time out" : "Time in"}
         </button>
       </div>
+      {syncStatus && <span role="status" className="max-w-64 text-right text-[10px] text-zinc-400">{syncStatus} <button type="button" onClick={() => { void refreshPersonalWorkSession(); }} className="text-sky-200 underline">Refresh</button></span>}
       {storageError && <span role="alert" className="max-w-56 text-right text-[10px] leading-4 text-rose-300">{storageError}</span>}
     </div>
   );

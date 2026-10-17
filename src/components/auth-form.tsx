@@ -1,5 +1,7 @@
 "use client";
 
+import { getSignInDestination } from "@/lib/sign-in-destination";
+import { resetPersonalWorkSession } from "@/lib/personal-work-session";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -118,7 +120,8 @@ export default function AuthForm({ mode }: { mode: AuthFormMode }) {
           setLoginPending(false);
           return;
         }
-        router.replace("/dashboard");
+        resetPersonalWorkSession();
+        router.replace(await getSignInDestination(createClient()));
         router.refresh();
       } catch {
         setMessage("Could not sign in. Check your connection and try again.");

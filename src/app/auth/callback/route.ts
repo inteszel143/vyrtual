@@ -1,3 +1,4 @@
+import { getSignInDestination } from "@/lib/sign-in-destination";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -30,7 +31,12 @@ export async function GET(request: NextRequest) {
         },
       );
       const { error } = await supabase.auth.exchangeCodeForSession(code);
-      if (!error) return response;
+      if (!error) {
+        if (request.nextUrl.searchParams.get("flow") !== "signup") {
+          response.headers.set("Location", new URL(await getSignInDestination(supabase), request.url).toString());
+        }
+        return response;
+      }
     } catch {
       // Network failures should offer the same retry path as expired codes.
     }

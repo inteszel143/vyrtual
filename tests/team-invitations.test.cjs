@@ -4,10 +4,21 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const ts = require('typescript');
 
-function route({ user = { id: 'owner' }, rpcError = null, sendError = null } = {}) {
+function route({ user = { id: 'owner' }, rpcError = null, sendError = null, workspace = { id: "workspace-a", name: "Example" }, invitations = [], members = [], readError = null } = {}) {
   const calls = [];
   const exports = {};
   const supabase = {
+    from: (table) => {
+      const result = { data: table === 'workspaces' ? workspace : table === 'team_invitations' ? invitations : members, error: readError };
+      const query = {
+        select: () => query,
+        eq: (column, value) => { calls.push({ table, column, value }); return query; },
+        order: async () => result,
+        maybeSingle: async () => result,
+        then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
+      };
+      return query;
+    },
     auth: { getUser: async () => ({ data: { user } }) },
     rpc: async (name, args) => {
       calls.push({ name, args });
@@ -69,4 +80,36 @@ test('email failure is reported as failure and can be retried', async () => {
   const response = await handler.POST(request());
   assert.equal(response.status, 502);
   assert.match((await response.json()).error, /saved.*rate limited/);
+});
+
+test('directory includes accepted members and pending invitations without duplicates', async () => {
+  const handler = route({
+    members: [{ user_id: 'member-a', email: 'joined@example.com', full_name: 'Joined Member', member_type: 'Employee', avatar_url: 'https://example.com/photo.jpg' }],
+    invitations: [
+      { id: 'accepted', email: 'joined@example.com', accepted_at: '2026-10-17T01:00:00Z' },
+      { id: 'pending', email: 'pending@example.com', accepted_at: null },
+    ],
+  });
+  const response = await handler.GET();
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.equal(result.invitations.length, 2);
+  assert.equal(result.invitations[0].joined, true);
+  assert.equal(result.invitations[0].avatar_url, 'https://example.com/photo.jpg');
+  assert.equal(result.invitations[1].joined, false);
+  assert.equal(result.workspaceName, 'Example');
+  assert.ok(handler.calls.some(call => call.column === 'owner_id' && call.value === 'owner'));
+  assert.equal(handler.calls.filter(call => call.column === 'workspace_id' && call.value === 'workspace-a').length, 2);
+});
+test('account without an owned workspace gets a helpful empty state, not forbidden', async () => {
+  const handler = route({ workspace: null });
+  const response = await handler.GET();
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.match(result.notice, /owner account/);
+  assert.deepEqual(result.invitations, []);
+});
+test('database failures are not presented as an empty team', async () => {
+  const response = await route({ readError: { code: 'unavailable' } }).GET();
+  assert.equal(response.status, 503);
 });

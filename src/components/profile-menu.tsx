@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemberProfile } from "@/components/member-profile-provider";
+import { resetPersonalWorkSession } from "@/lib/personal-work-session";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ProfileAvatar from "@/components/profile-avatar";
@@ -27,6 +28,7 @@ export default function ProfileMenu() {
     try {
       const { error } = await createClient().auth.signOut({ scope: "local" });
       if (error) throw error;
+      resetPersonalWorkSession();
       // A full navigation clears the in-memory workspace router cache.
       window.location.replace("/login");
     } catch {

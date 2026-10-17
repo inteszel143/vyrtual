@@ -1,3 +1,4 @@
+import OwnerWelcome from "@/components/owner-welcome";
 import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
@@ -109,6 +110,7 @@ function SectionHeading({
 export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#09090d] text-white">
+      <OwnerWelcome />
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
         <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-white/[0.07] bg-[#0d0d12] px-5 py-6 lg:flex">
           <div className="mb-6 flex items-center justify-between">

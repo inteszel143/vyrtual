@@ -1,5 +1,7 @@
 "use client";
 
+import { createClient } from "@/lib/supabase/client";
+import AvatarImage from "@/components/avatar-image";
 import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
@@ -23,6 +25,7 @@ type Member = {
   status: string;
   location: string;
   initials: string;
+  avatarUrl: string;
   color: string;
   hours: string;
 };
@@ -70,16 +73,18 @@ function Icon({
 
 function MemberAvatar({
   initials,
+  avatarUrl,
   color,
   size = "size-10",
 }: {
   initials: string;
+  avatarUrl: string;
   color: string;
   size?: string;
 }) {
   return (
-    <span className={`flex shrink-0 items-center justify-center rounded-full text-xs font-semibold ring-1 ring-white/[0.06] ${size} ${color}`}>
-      {initials}
+    <span role="img" aria-label="Teammate profile photo" className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-semibold ring-1 ring-white/[0.06] ${size} ${color}`}>
+      <AvatarImage src={avatarUrl} initials={initials} />
     </span>
   );
 }
@@ -97,31 +102,64 @@ export default function TeamPage() {
   const [inviteType, setInviteType] = useState<Member["type"]>("Employee");
 
   const [loading, setLoading] = useState(true);
+  const [accountEmail, setAccountEmail] = useState("");
+  const [workspaceNotice, setWorkspaceNotice] = useState("");
   const [loadError, setLoadError] = useState("");
   const [inviteError, setInviteError] = useState("");
   const [sending, setSending] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const companyName = useSyncExternalStore(subscribeToCompanyName, getCompanyNameSnapshot, getCompanyNameServerSnapshot) || "My workspace";
+  const [savedCompanyName, setSavedCompanyName] = useState("");
+  const requestId = useRef(0);
+  const localCompanyName = useSyncExternalStore(subscribeToCompanyName, getCompanyNameSnapshot, getCompanyNameServerSnapshot) || "My workspace";
 
-  const loadTeam = useCallback(() => fetch("/api/team/invitations", { cache: "no-store" }).then(async (response) => {
+  const companyName = savedCompanyName || localCompanyName;
+
+  const loadTeam = useCallback(() => {
+    const currentRequest = ++requestId.current;
+    return fetch("/api/team/invitations", { cache: "no-store" }).then(async (response) => {
       const result = await response.json();
+      if (currentRequest !== requestId.current) return;
       if (!response.ok) throw new Error(result.error);
       setLoadError("");
+      setSavedCompanyName(result.workspaceName);
+      setAccountEmail(result.accountEmail);
+      setWorkspaceNotice(result.notice || "");
       setTeamMembers(result.invitations.map((invite: {
         id: string; full_name: string; email: string; job_title: string;
-        member_type: Member["type"]; accepted_at: string | null; expires_at: string;
+        member_type: Member["type"]; avatar_url?: string; joined: boolean; expires_at: string | null;
       }) => ({
+        avatarUrl: invite.avatar_url ?? "",
         id: invite.id, name: invite.full_name, email: invite.email, role: invite.job_title,
-        type: invite.member_type, status: invite.accepted_at ? "Joined" : "Invited",
-        location: invite.accepted_at ? "Invitation accepted" : new Date(invite.expires_at) <= new Date() ? "Invitation expired" : "Awaiting acceptance",
+        type: invite.member_type, status: invite.joined ? "Joined" : "Invited",
+        location: invite.joined ? "Invitation accepted" : invite.expires_at && new Date(invite.expires_at) <= new Date() ? "Invitation expired" : "Awaiting acceptance",
         initials: invite.full_name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase(),
         color: "bg-sky-400/20 text-sky-200", hours: "—",
       })));
     }).catch((error: unknown) => {
+      if (currentRequest !== requestId.current) return;
+      setTeamMembers([]);
+      setAccountEmail(""); setWorkspaceNotice("");
+      setSavedCompanyName("");
       setLoadError(error instanceof Error ? error.message : "Could not load your team. Please try again.");
-    }).finally(() => setLoading(false)), []);
+    }).finally(() => { if (currentRequest === requestId.current) setLoading(false); });
+  }, []);
 
-  useEffect(() => { void loadTeam(); }, [loadTeam]);
+  const invalidateRequests = useCallback(() => { requestId.current++; }, []);
+
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === "visible") void loadTeam(); };
+    void loadTeam();
+    window.addEventListener("focus", refresh);
+    const timer = window.setInterval(refresh, 15_000);
+    const { data: { subscription } } = createClient().auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        requestId.current++;
+        setTeamMembers([]); setSavedCompanyName(""); setAccountEmail(""); setWorkspaceNotice("");
+        window.setTimeout(refresh, 0);
+      }
+    });
+    return () => { invalidateRequests(); window.clearInterval(timer); window.removeEventListener("focus", refresh); subscription.unsubscribe(); };
+  }, [loadTeam, invalidateRequests]);
   useEffect(() => {
     if (inviteOpen) dialogRef.current?.showModal();
     else dialogRef.current?.close();
@@ -309,6 +347,8 @@ export default function TeamPage() {
               </div>
             </section>
 
+            {accountEmail && <p className="mt-5 text-xs text-zinc-400">Signed in as <span className="text-zinc-200">{accountEmail}</span></p>}
+            {workspaceNotice && <div role="status" className="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm leading-6 text-zinc-300">{workspaceNotice} <Link href="/login" className="font-medium text-sky-200 underline">Switch account</Link></div>}
             <section aria-label="Team summary" className="mt-8 grid gap-3 sm:grid-cols-3">
               <article className="rounded-2xl border border-white/[0.07] bg-[#111116] p-4 sm:p-5">
                 <p className="text-xs text-zinc-500">Team members</p>
@@ -340,7 +380,7 @@ export default function TeamPage() {
                     <h2 className="text-base font-semibold text-white">All members</h2>
                     <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 text-[10px] text-zinc-400">{filteredMembers.length}</span>
                   </div>
-                  <p className="mt-1 text-xs text-zinc-500">Your teammates and pending invitations</p>
+                  <p className="mt-1 text-xs text-zinc-500">Your teammates and pending invitations · Updates every 15 seconds</p>
                 </div>
                 <label className="relative block w-full sm:max-w-[280px]">
                   <span className="sr-only">Search team members</span>
@@ -401,7 +441,7 @@ export default function TeamPage() {
                   {filteredMembers.map((member) => (
                     <article key={member.email} className="rounded-2xl border border-white/[0.07] bg-[#111116] p-4 transition-colors hover:border-white/[0.12] sm:p-5">
                       <div className="flex items-start gap-3">
-                        <MemberAvatar initials={member.initials} color={member.color} size="size-11" />
+                        <MemberAvatar avatarUrl={member.avatarUrl} initials={member.initials} color={member.color} size="size-11" />
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <h3 className="truncate text-sm font-semibold text-white">{member.name}</h3>

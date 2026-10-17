@@ -40,3 +40,19 @@ Verify with a recipient account: save the welcome form, reload, check the modal 
 Local database tests: after the existing invitation bootstrap, migration and checks, run `tests/sql/member-welcome-bootstrap.sql`, the member welcome migration, then `tests/sql/member-welcome-check.sql` on the disposable database only. The storage stand-in tests policy isolation; it does not test the hosted Storage HTTP service.
 
 Profile updates follow [Supabase user metadata updates](https://supabase.com/docs/reference/javascript/auth-updateuser); uploads use [Storage access policies](https://supabase.com/docs/guides/storage/security/access-control).
+
+## Password setup for invited members
+
+The welcome form asks new invitees to create and confirm a password (minimum eight characters; Supabase may enforce additional requirements). Existing users can choose “I already have a password” to keep theirs. Members who completed the earlier welcome without password setup see the updated welcome on their next visit. Later still defers setup; a password is not an authorization requirement.
+
+Passwords go directly to Supabase Auth via `updateUser({ password })`, never to profile metadata or browser storage. The `password_login_ready` metadata flag is only an onboarding preference, not proof that an account has a password or permission to access anything. Members can also set/change their password in My profile. Supabase may require a fresh sign-in for a password change.
+
+Email/password sign-in and normal OAuth callbacks now look up workspace ownership and membership: owners go to `/dashboard`, employees/freelancers go to `/my-workspace`. No new database migration is needed beyond the existing invitation and member welcome migrations.
+
+Run `node --test tests/member-password.test.cjs`. Live verification: use an invited test account to set a password, log out, and sign in through `/login` with the same email/password; confirm the personal workspace opens. Also verify an existing-password invitee and an owner login. Reference: [Supabase password updates](https://supabase.com/docs/reference/javascript/auth-updateuser).
+
+## Team directory photos
+
+Apply `supabase/migrations/202610170003_team_member_photos.sql` after the invitation migration. This adds an owner-readable photo URL to membership records, backfills existing account photos, and synchronizes future auth metadata photo changes and newly accepted memberships. No additional Auth fields are exposed. `/team` uses the saved URL with an initials fallback and its existing 15-second refresh. Pending invitations have initials until a member accepts. Users do not need to upload existing photos again.
+
+For disposable database tests after the invitation lifecycle checks: run `tests/sql/team-member-photos-bootstrap.sql`, the photo migration, then `tests/sql/team-member-photos-check.sql`. The bootstrap adds a stand-in Auth metadata column; never run it in the hosted project.

@@ -3,6 +3,9 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import PersonalWorkspaceShell from "@/components/personal-workspace-shell";
 import {
+  getPersonalWorkStatusSnapshot,
+  getPersonalWorkStatusServerSnapshot,
+  refreshPersonalWorkSession,
   getPersonalWorkLogsServerSnapshot,
   getPersonalWorkLogsSnapshot,
   getPersonalWorkSessionServerSnapshot,
@@ -39,7 +42,7 @@ function formatDuration(milliseconds: number) {
 function formatDayLabel(timestamp: number, todayStart: number) {
   const startOfDay = getStartOfDay(timestamp);
   if (startOfDay === todayStart) return "Today";
-  if (startOfDay === todayStart - 86_400_000) return "Yesterday";
+  if (startOfDay === shiftDay(todayStart, -1)) return "Yesterday";
   return new Date(timestamp).toLocaleDateString([], {
     weekday: "long",
     month: "short",
@@ -48,6 +51,7 @@ function formatDayLabel(timestamp: number, todayStart: number) {
 }
 
 export default function MyTimePage() {
+  const syncStatus = useSyncExternalStore(subscribeToPersonalWorkSession, getPersonalWorkStatusSnapshot, getPersonalWorkStatusServerSnapshot);
   const activeStartedAt = useSyncExternalStore(
     subscribeToPersonalWorkSession,
     getPersonalWorkSessionSnapshot,
@@ -110,6 +114,8 @@ export default function MyTimePage() {
       title="Time logs"
       description="Review your daily time in and time out records and track your hours."
     >
+      {syncStatus && <p role="status" className="mb-5 rounded-xl border border-sky-300/20 p-4 text-sm text-zinc-300">{syncStatus} <button type="button" onClick={() => { void refreshPersonalWorkSession(); }} className="text-sky-200 underline">Retry</button></p>}
+      {!syncStatus && now > 0 && <>
       <section className="grid gap-3 sm:grid-cols-3">
         <article className="rounded-2xl border border-white/[0.07] bg-[#111116] p-5">
           <p className="text-xs text-zinc-500">Today</p>
@@ -159,7 +165,8 @@ export default function MyTimePage() {
           ))}
         </div>
       </section>
-      <p className="mt-4 text-[10px] leading-5 text-zinc-600">Logs are saved in this browser preview only. Time out in the navbar to close the current entry.</p>
+      <p className="mt-4 text-[10px] leading-5 text-zinc-600">Time logs are saved to your account. Time out in the navbar to close the current entry.</p>
+      </>}
     </PersonalWorkspaceShell>
   );
 }

@@ -5,11 +5,30 @@ export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Please sign in again." }, { status: 401 });
-  const { data, error } = await supabase.from("team_invitations")
-    .select("id,full_name,email,job_title,member_type,accepted_at,expires_at")
-    .order("last_sent_at", { ascending: false });
-  if (error) return Response.json({ error: "Could not load your team. Check that the team invitation migration has been applied." }, { status: 503 });
-  return Response.json({ invitations: data }, { headers: { "Cache-Control": "private, no-store" } });
+  const { data: workspace, error: workspaceError } = await supabase.from("workspaces")
+    .select("id,name").eq("owner_id", user.id).maybeSingle();
+  const headers = { "Cache-Control": "private, no-store" };
+  if (workspaceError) return Response.json({ error: "Could not load your workspace. Please retry." }, { status: 503, headers });
+  if (!workspace) return Response.json({
+    invitations: [], workspaceName: "", accountEmail: user.email ?? "",
+    notice: "No owned workspace was found for this account. If you already invited teammates, switch to the owner account that sent those invitations. For a new team, send your first invitation to create its workspace.",
+  }, { headers });
+  const [invitationsResult, membersResult] = await Promise.all([
+    supabase.from("team_invitations").select("id,full_name,email,job_title,member_type,accepted_at,expires_at")
+      .eq("workspace_id", workspace.id).order("last_sent_at", { ascending: false }),
+    supabase.from("workspace_members").select("user_id,full_name,email,job_title,member_type,avatar_url")
+      .eq("workspace_id", workspace.id),
+  ]);
+  if (invitationsResult.error || membersResult.error) return Response.json({ error: "Could not load your team. Please retry and check the team invitation database setup." }, { status: 503, headers });
+  const members = membersResult.data ?? [];
+  const invitations = invitationsResult.data ?? [];
+  const joinedEmails = new Set(members.map((member) => member.email.toLowerCase()));
+  const directory = [
+    ...members.map((member) => ({ ...member, id: member.user_id, joined: true, expires_at: null })),
+    ...invitations.filter((invite) => !joinedEmails.has(invite.email.toLowerCase()))
+      .map((invite) => ({ ...invite, joined: !!invite.accepted_at })),
+  ];
+  return Response.json({ invitations: directory, workspaceName: workspace.name, accountEmail: user.email ?? "", notice: "" }, { headers });
 }
 
 export async function POST(request: Request) {

@@ -122,10 +122,10 @@ export default function OfficeRoom({ ownerView = false }: { ownerView?: boolean 
     }
   };
 
-  const leaveOffice = () => {
+  const leaveOffice = async () => {
     setMediaError("");
     try {
-      timeOutOfPersonalWorkSession();
+      await timeOutOfPersonalWorkSession();
       notify({ kind: "info", title: "Office left", message: "You’ve timed out and are no longer listed in the office." });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Browser storage is unavailable.";
@@ -134,9 +134,9 @@ export default function OfficeRoom({ ownerView = false }: { ownerView?: boolean 
     }
   };
 
-  const rejoinOffice = () => {
+  const rejoinOffice = async () => {
     try {
-      timeInToPersonalWorkSession();
+      await timeInToPersonalWorkSession();
       notify({ kind: "success", title: "Welcome back", message: "You’ve timed in and rejoined the office." });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Browser storage is unavailable.";
