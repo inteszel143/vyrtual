@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
 import { useState, type FormEvent } from "react";
+import { useToast } from "@/components/toast-provider";
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: "overview" },
@@ -113,6 +114,7 @@ const inputClassName =
   "h-10 w-full rounded-lg border border-white/[0.08] bg-[#0d0d12] px-3 text-xs text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-sky-300/40";
 
 export default function SettingsPage() {
+  const { notify } = useToast();
   const [workspaceName, setWorkspaceName] = useState("Northstar Studio");
   const [workspaceUrl, setWorkspaceUrl] = useState("northstar-studio");
   const [fullName, setFullName] = useState("Alex Morgan");
@@ -126,11 +128,13 @@ export default function SettingsPage() {
   function saveSettings(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSavedMessage("Preview updated for this page. Settings aren’t connected to an account yet.");
+    notify({ kind: "success", title: "Settings updated", message: "Preview updated for this page. Changes aren’t saved to an account." });
   }
 
   function updatePreference(update: () => void) {
     update();
     setSavedMessage("");
+    notify({ kind: "info", title: "Preference updated", message: "Your selection changed in this preview." });
   }
 
   return (

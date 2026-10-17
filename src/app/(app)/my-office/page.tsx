@@ -15,6 +15,7 @@ import {
   timeOutOfPersonalWorkSession,
 } from "@/lib/personal-work-session";
 import type { OfficeParticipant } from "@/components/my-office/types";
+import { useToast } from "@/components/toast-provider";
 
 const baseParticipants: OfficeParticipant[] = [
   { id: "alex", name: "Alex Morgan", role: "Freelance product designer", initials: "AM", color: "bg-rose-300/15 text-rose-200", gradient: "from-rose-300 to-orange-300", state: "You", isLocal: true },
@@ -24,6 +25,7 @@ const baseParticipants: OfficeParticipant[] = [
 ];
 
 export default function MyOfficePage() {
+  const { notify } = useToast();
   const clockedInAt = useSyncExternalStore(
     subscribeToPersonalWorkSession,
     getPersonalWorkSessionSnapshot,
@@ -53,9 +55,12 @@ export default function MyOfficePage() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
   }, []);
 
-  useEffect(() => {
-    if (!joined) releaseMedia();
-  }, [joined, releaseMedia]);
+  useEffect(
+    () => subscribeToPersonalWorkSession(() => {
+      if (getPersonalWorkSessionSnapshot() === 0) releaseMedia();
+    }),
+    [releaseMedia],
+  );
 
   const toggleMedia = async (kind: "audio" | "video") => {
     const enabled = kind === "video" ? cameraEnabled : microphoneEnabled;
@@ -70,11 +75,14 @@ export default function MyOfficePage() {
       updateStream(stream && stream.getTracks().length > 0 ? new MediaStream(stream.getTracks()) : null);
       if (kind === "video") setCameraEnabled(false);
       else setMicrophoneEnabled(false);
+      notify({ kind: "info", title: kind === "video" ? "Camera turned off" : "Microphone muted" });
       return;
     }
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setMediaError("This browser does not support camera and microphone access. Try a modern browser over HTTPS.");
+      const message = "This browser does not support camera and microphone access. Try a modern browser over HTTPS.";
+      setMediaError(message);
+      notify({ kind: "error", title: "Media device unavailable", message });
       return;
     }
 
@@ -89,9 +97,11 @@ export default function MyOfficePage() {
       updateStream(new MediaStream(tracks));
       if (kind === "video") setCameraEnabled(true);
       else setMicrophoneEnabled(true);
+      notify({ kind: "success", title: kind === "video" ? "Camera turned on" : "Microphone enabled", message: "This device is available for your local preview." });
     } catch (error) {
       const message = error instanceof Error ? error.message : "The browser could not start the requested device.";
       setMediaError(`Could not turn on your ${kind === "video" ? "camera" : "microphone"}: ${message}`);
+      notify({ kind: "error", title: `Could not enable ${kind === "video" ? "camera" : "microphone"}`, message });
     } finally {
       setMediaPending(false);
     }
@@ -101,18 +111,22 @@ export default function MyOfficePage() {
     setMediaError("");
     try {
       timeOutOfPersonalWorkSession();
+      notify({ kind: "info", title: "Office left", message: "You’ve timed out and are no longer listed in the office." });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Browser storage is unavailable.";
       setMediaError(`Could not time out: ${message}`);
+      notify({ kind: "error", title: "Could not leave office", message });
     }
   };
 
   const rejoinOffice = () => {
     try {
       timeInToPersonalWorkSession();
+      notify({ kind: "success", title: "Welcome back", message: "You’ve timed in and rejoined the office." });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Browser storage is unavailable.";
       setMediaError(`Could not time in: ${message}`);
+      notify({ kind: "error", title: "Could not join office", message });
     }
   };
 
@@ -149,7 +163,7 @@ export default function MyOfficePage() {
           </div>
 
           <aside className="space-y-4">
-            <ConnectionStatus state={connection} />
+            <ConnectionStatus state={joined ? "connected" : "disconnected"} />
             <ParticipantList participants={baseParticipants} joined={joined} />
           </aside>
         </div>

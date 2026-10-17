@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
+import { useToast } from "@/components/toast-provider";
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: "overview" },
@@ -90,6 +91,7 @@ function downloadInvoiceHistory() {
 }
 
 export default function BillingPage() {
+  const { notify } = useToast();
   return (
     <main className="min-h-screen bg-[#09090d] text-white">
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
@@ -296,7 +298,7 @@ export default function BillingPage() {
                     <h2 className="text-base font-semibold text-white">Invoice history</h2>
                     <p className="mt-1 text-xs text-zinc-500">Recent billing activity · sample records</p>
                   </div>
-                  <button type="button" onClick={downloadInvoiceHistory} className="inline-flex h-9 items-center justify-center gap-2 self-start rounded-lg border border-white/[0.08] px-3 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.04] sm:self-auto">
+                  <button type="button" onClick={() => { downloadInvoiceHistory(); notify({ kind: "success", title: "Invoice history exported", message: "Your invoice preview was downloaded as a CSV." }); }} className="inline-flex h-9 items-center justify-center gap-2 self-start rounded-lg border border-white/[0.08] px-3 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.04] sm:self-auto">
                     <Icon name="download" className="size-3.5" />
                     Export CSV
                   </button>

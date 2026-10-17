@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore, useState } from "react";
+import { useToast } from "@/components/toast-provider";
 import {
   getPersonalWorkSessionServerSnapshot,
   getPersonalWorkSessionSnapshot,
@@ -18,6 +19,7 @@ function formatElapsed(startedAt: number, now: number) {
 }
 
 export default function WorkClockControl() {
+  const { notify } = useToast();
   const startedAt = useSyncExternalStore(
     subscribeToPersonalWorkSession,
     getPersonalWorkSessionSnapshot,
@@ -27,7 +29,6 @@ export default function WorkClockControl() {
   const [storageError, setStorageError] = useState("");
 
   useEffect(() => {
-    setNow(Date.now());
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, []);
@@ -39,9 +40,13 @@ export default function WorkClockControl() {
     try {
       if (clockedIn) timeOutOfPersonalWorkSession();
       else timeInToPersonalWorkSession();
+      notify(clockedIn
+        ? { kind: "info", title: "Timed out", message: "Your office presence has ended." }
+        : { kind: "success", title: "Timed in", message: "You’re now listed in your virtual office." });
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Browser storage is unavailable.";
       setStorageError(`Could not update your time clock: ${detail}`);
+      notify({ kind: "error", title: "Time clock couldn’t be updated", message: detail });
     }
   };
 
