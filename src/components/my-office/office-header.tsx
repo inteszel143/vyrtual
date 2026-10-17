@@ -15,7 +15,7 @@ export default function OfficeHeader({
       <div>
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-sky-200"><CompanyName /></p>
         <h2 className="mt-2 text-xl font-semibold tracking-tight">{roomName}</h2>
-        <p className="mt-1 text-xs text-zinc-400">{onlineCount} {onlineCount === 1 ? "person" : "people"} online</p>
+        <p className="mt-1 text-xs text-zinc-400">{onlineCount} {onlineCount === 1 ? "person" : "people"} timed in</p>
       </div>
       <span className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-xs ${
         connection === "connected"

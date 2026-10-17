@@ -1,4 +1,5 @@
 import type { OfficeParticipant, OfficePresence } from "./types";
+import AvatarImage from "@/components/avatar-image";
 import Link from "next/link";
 
 const presenceStyles: Record<OfficePresence, { dot: string; text: string; badge: string; emoji: string }> = {
@@ -60,6 +61,7 @@ const presenceGroups: OfficePresence[] = [
   "Snoozed",
   "Do not disturb",
   "Away",
+  "Offline",
 ];
 
 export default function ParticipantList({
@@ -82,8 +84,7 @@ export default function ParticipantList({
       <div className="mt-4 space-y-4">
         {presenceGroups.map((presence) => {
           const members = participants.filter((person) => {
-            if (person.presence === "Offline") return false;
-            if (person.isLocal && !joined) return false;
+            if (person.isLocal && !joined && presence !== "Offline") return false;
             return person.presence === presence;
           });
           if (members.length === 0) return null;
@@ -100,7 +101,7 @@ export default function ParticipantList({
               <ul className="mt-2 divide-y divide-white/[0.05]">
                 {members.map((person) => (
                   <li key={person.id} className="flex items-center gap-2.5 py-3 first:pt-2 last:pb-0">
-                    <span className={`flex size-8 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ${person.color}`}>{person.initials}</span>
+                    <span className={`relative flex size-8 overflow-hidden shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ${person.color}`}><AvatarImage src={person.avatarUrl ?? ""} initials={person.initials} /></span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[11px] font-medium text-zinc-200">{person.name}{person.isLocal ? " (You)" : ""}</span>
                       <span className="mt-1 block truncate text-[9px] text-zinc-500">{person.role}{person.room ? ` · ${person.room}` : ""}</span>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { OfficeParticipant } from "./types";
+import AvatarImage from "@/components/avatar-image";
 import ProfileAvatar from "@/components/profile-avatar";
 import Link from "next/link";
 
@@ -46,8 +47,8 @@ function VideoTile({
           {isLocal ? (
             <ProfileAvatar initials={participant.initials} className="size-16 border-white/20 bg-black/20 text-lg text-white shadow-xl" />
           ) : (
-            <span className="flex size-16 items-center justify-center rounded-full border border-white/20 bg-black/20 text-lg font-semibold text-white shadow-xl">
-              {participant.initials}
+            <span className="relative flex size-16 overflow-hidden items-center justify-center rounded-full border border-white/20 bg-black/20 text-lg font-semibold text-white shadow-xl">
+              <AvatarImage src={participant.avatarUrl ?? ""} initials={participant.initials} />
             </span>
           )}
         </div>
@@ -72,7 +73,7 @@ function VideoTile({
       </div>
       {!isLocal && (
         <div className="absolute right-3 top-3 flex items-center gap-2">
-          <span className="rounded-md border border-white/[0.08] bg-black/35 px-2 py-1 text-[9px] text-zinc-300">Sample tile</span>
+          <span className="rounded-md border border-white/[0.08] bg-black/35 px-2 py-1 text-[9px] text-zinc-300">{participant.live ? "Profile · no live video" : "Sample tile"}</span>
           <Link
             href={`${messageHrefBase}?to=${encodeURIComponent(participant.id)}`}
             aria-label={`Message ${participant.name}`}

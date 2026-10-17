@@ -40,12 +40,12 @@ export default function VideoControls({
           <button type="button" disabled={disabled} aria-pressed={microphoneEnabled} onClick={onToggleMicrophone} className={`inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${microphoneEnabled ? "border-white/[0.1] bg-white/[0.04] text-zinc-200 hover:bg-white/[0.08]" : "border-rose-300/20 bg-rose-300/[0.08] text-rose-200 hover:bg-rose-300/[0.14]"}`}>
             <ControlIcon name="microphone" />{microphoneEnabled ? "Mute microphone" : "Unmute microphone"}
           </button>
-          <button type="button" onClick={onLeave} className="inline-flex h-10 items-center gap-2 rounded-xl bg-rose-500 px-3 text-xs font-semibold text-white transition-colors hover:bg-rose-400">
+          <button type="button" disabled={disabled} onClick={onLeave} className="inline-flex h-10 items-center gap-2 rounded-xl bg-rose-500 px-3 text-xs font-semibold text-white transition-colors hover:bg-rose-400">
             <ControlIcon name="leave" />Time out &amp; leave
           </button>
         </>
       ) : (
-        <button type="button" onClick={onJoin} className="inline-flex h-10 items-center gap-2 rounded-xl bg-sky-300 px-4 text-xs font-semibold text-slate-950 transition-colors hover:bg-sky-200">
+        <button type="button" disabled={disabled} onClick={onJoin} className="inline-flex h-10 items-center gap-2 rounded-xl bg-sky-300 px-4 text-xs font-semibold text-slate-950 transition-colors hover:bg-sky-200">
           <ControlIcon name="join" />Time in &amp; join office
         </button>
       )}

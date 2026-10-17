@@ -10,6 +10,8 @@ export type OfficePresence =
   | "Do not disturb";
 
 export type OfficeParticipant = {
+  avatarUrl?: string;
+  live?: boolean;
   id: string;
   name: string;
   role: string;
