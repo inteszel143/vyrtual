@@ -1,16 +1,11 @@
+import OwnerWelcome from "@/components/owner-welcome";
 import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
-
-const navigation = [
-  { label: "Overview", href: "/dashboard", icon: "overview" },
-  { label: "Virtual office", href: "/office", icon: "office" },
-  { label: "Team", href: "/team", icon: "team" },
-  { label: "Schedules", href: "/schedules", icon: "team" },
-  { label: "Attendance", href: "/attendance", icon: "time" },
-  { label: "Time tracking", href: "/time-tracking", icon: "time" },
-  { label: "Reports", href: "/reports", icon: "reports" },
-];
+import MessageButton from "@/components/message-button";
+import CompanyName from "@/components/company-name";
+import OwnerWorkspaceBadge from "@/components/owner-workspace-badge";
+import { OwnerNavigationIcon, ownerWorkspaceNavigation as navigation } from "@/components/owner-navigation";
 
 const metrics = [
   {
@@ -115,6 +110,7 @@ function SectionHeading({
 export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#09090d] text-white">
+      <OwnerWelcome />
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
         <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-white/[0.07] bg-[#0d0d12] px-5 py-6 lg:flex">
           <div className="mb-6 flex items-center justify-between">
@@ -135,18 +131,18 @@ export default function DashboardPage() {
             Workspace
           </div>
           <nav aria-label="Workspace navigation" className="space-y-1">
-            {navigation.map(({ label, href, icon }, index) => (
+            {navigation.map(({ label, href, icon }) => (
               <Link
                 key={href}
                 href={href}
-                aria-current={index === 0 ? "page" : undefined}
+                aria-current={href === "/dashboard" ? "page" : undefined}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                  index === 0
+                  href === "/dashboard"
                     ? "bg-sky-400/10 text-sky-200"
                     : "text-zinc-400 hover:bg-white/[0.04] hover:text-white"
                 }`}
               >
-                <Icon name={icon} className="size-[18px]" />
+                <OwnerNavigationIcon name={icon} />
                 {label}
               </Link>
             ))}
@@ -161,11 +157,11 @@ export default function DashboardPage() {
               Billing
             </Link>
             <Link href="/company-settings" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
-              <Icon name="settings" className="size-[18px]" />
+              <OwnerNavigationIcon name="company" />
               Company settings
             </Link>
             <Link href="/settings" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
-              <Icon name="settings" className="size-[18px]" />
+              <OwnerNavigationIcon name="profile" />
               Settings
             </Link>
           </nav>
@@ -176,7 +172,7 @@ export default function DashboardPage() {
                 NL
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">Northstar Studio</p>
+                <p className="truncate text-sm font-medium text-white"><CompanyName /></p>
                 <p className="text-xs text-zinc-500">Free workspace</p>
               </div>
             </div>
@@ -194,13 +190,13 @@ export default function DashboardPage() {
               <span className="font-semibold tracking-tight">Vyrtual</span>
             </div>
             <nav aria-label="Workspace navigation" className="hidden items-center gap-1 sm:flex lg:hidden">
-              {navigation.map(({ label, href }, index) => (
+              {navigation.map(({ label, href }) => (
                 <Link
                   key={href}
                   href={href}
-                  aria-current={index === 0 ? "page" : undefined}
+                  aria-current={href === "/dashboard" ? "page" : undefined}
                   className={`rounded-lg px-3 py-2 text-xs font-medium ${
-                    index === 0 ? "bg-sky-400/10 text-sky-200" : "text-zinc-400 hover:text-white"
+                    href === "/dashboard" ? "bg-sky-400/10 text-sky-200" : "text-zinc-400 hover:text-white"
                   }`}
                 >
                   {label}
@@ -212,6 +208,7 @@ export default function DashboardPage() {
               <span className="text-zinc-200">Overview</span>
             </div>
             <div className="ml-auto flex items-center gap-3">
+              <OwnerWorkspaceBadge />
               <button
                 type="button"
                 aria-label="Notifications"
@@ -220,6 +217,7 @@ export default function DashboardPage() {
                 <Icon name="bell" className="size-[18px]" />
                 <span className="absolute right-2 top-2 size-1.5 rounded-full bg-sky-300" />
               </button>
+              <MessageButton />
               <ProfileMenu />
             </div>
           </header>
@@ -227,13 +225,13 @@ export default function DashboardPage() {
             aria-label="Mobile workspace navigation"
             className="flex gap-1 overflow-x-auto border-b border-white/[0.07] px-4 py-2 sm:hidden"
           >
-            {navigation.map(({ label, href }, index) => (
+            {navigation.map(({ label, href }) => (
               <Link
                 key={href}
                 href={href}
-                aria-current={index === 0 ? "page" : undefined}
+                aria-current={href === "/dashboard" ? "page" : undefined}
                 className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium ${
-                  index === 0 ? "bg-sky-400/10 text-sky-200" : "text-zinc-400 hover:text-white"
+                  href === "/dashboard" ? "bg-sky-400/10 text-sky-200" : "text-zinc-400 hover:text-white"
                 }`}
               >
                 {label}
@@ -396,7 +394,7 @@ export default function DashboardPage() {
             </section>
 
             <footer className="mt-8 flex flex-col gap-3 border-t border-white/[0.06] pt-5 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
-              <span>Northstar Studio workspace</span>
+              <span><CompanyName /> workspace</span>
               <Link href="/settings" className="transition-colors hover:text-zinc-300">
                 Manage workspace
               </Link>

@@ -7,12 +7,12 @@ export default function ConnectionStatus({ state }: { state: ConnectionState }) 
     disconnected: "border-white/[0.08] bg-white/[0.025] text-zinc-300",
   } satisfies Record<ConnectionState, string>;
   const label = {
-    connected: "Connected to office preview",
+    connected: "Timed in to your office",
     reconnecting: "Reconnecting to office…",
     disconnected: "Disconnected from office",
   } satisfies Record<ConnectionState, string>;
   const detail = {
-    connected: "Your office presence is active. Coworker video and audio are sample content.",
+    connected: "Your saved work session is active. Camera and microphone are local previews, not a live call.",
     reconnecting: "Your office presence is temporarily interrupted.",
     disconnected: "Your camera and microphone are off while you’re away.",
   } satisfies Record<ConnectionState, string>;

@@ -1,3 +1,6 @@
+import MemberWelcome from "@/components/member-welcome";
+import MemberGreeting from "@/components/member-greeting";
+import CompanyName from "@/components/company-name";
 import Link from "next/link";
 import PersonalWorkspaceShell from "@/components/personal-workspace-shell";
 
@@ -10,9 +13,9 @@ const metrics = [
 export default function MyWorkspacePage() {
   return (
     <PersonalWorkspaceShell activeHref="/my-workspace" title="My workspace" description="Your personal view of work, time, and what’s coming up.">
+      <MemberWelcome />
       <section className="rounded-2xl border border-sky-300/15 bg-gradient-to-br from-sky-300/[0.08] to-indigo-400/[0.03] p-5 sm:p-7">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-sky-200">Monday, October 19</p>
-        <h3 className="mt-3 text-2xl font-semibold tracking-tight">Good morning, Alex</h3>
+        <MemberGreeting />
         <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">You’re making steady progress this week. Review your schedule or start tracking your next work session.</p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link href="/my-time" className="inline-flex h-10 items-center rounded-xl bg-sky-300 px-4 text-xs font-semibold text-slate-950 transition-colors hover:bg-sky-200">Track my time</Link>
@@ -40,7 +43,7 @@ export default function MyWorkspacePage() {
           <div className="mt-4 divide-y divide-white/[0.05]">
             {[["Today", "Brand design refinements", "3h 20m"], ["Yesterday", "Campaign landing page", "6h 45m"], ["Friday", "Client review & revisions", "5h 30m"]].map(([day, project, duration]) => (
               <div key={day} className="flex items-center justify-between gap-3 py-3">
-                <div><p className="text-xs font-medium text-zinc-200">{project}</p><p className="mt-1 text-[10px] text-zinc-500">{day} · Northstar Studio</p></div>
+                <div><p className="text-xs font-medium text-zinc-200">{project}</p><p className="mt-1 text-[10px] text-zinc-500">{day} · <CompanyName /></p></div>
                 <span className="shrink-0 text-xs text-zinc-400">{duration}</span>
               </div>
             ))}

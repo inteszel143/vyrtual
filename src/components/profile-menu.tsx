@@ -1,12 +1,46 @@
 "use client";
 
+import { useMemberProfile } from "@/components/member-profile-provider";
+import { resetPersonalWorkSession } from "@/lib/personal-work-session";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import ProfileAvatar from "@/components/profile-avatar";
+import ProfilePhotoControl from "@/components/profile-photo-control";
+import LoadingScreen from "@/components/loading-screen";
+import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/toast-provider";
+import { createPortal } from "react-dom";
 
 export default function ProfileMenu() {
+  const profile = useMemberProfile();
   const [open, setOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const logoutInFlight = useRef(false);
+  const { notify } = useToast();
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+
+  async function handleLogout() {
+    if (logoutInFlight.current) return;
+    logoutInFlight.current = true;
+    setLoggingOut(true);
+    setOpen(false);
+    try {
+      const { error } = await createClient().auth.signOut({ scope: "local" });
+      if (error) throw error;
+      resetPersonalWorkSession();
+      // A full navigation clears the in-memory workspace router cache.
+      window.location.replace("/login");
+    } catch {
+      logoutInFlight.current = false;
+      setLoggingOut(false);
+      notify({
+        kind: "error",
+        title: "Could not log out",
+        message: "Check your connection and try again.",
+      });
+    }
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -35,18 +69,18 @@ export default function ProfileMenu() {
 
   return (
     <div ref={menuRef} className="relative">
+      {loggingOut && createPortal(<LoadingScreen />, document.body)}
       <button
         ref={triggerRef}
         type="button"
+        disabled={loggingOut}
         aria-label="Open profile menu"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((isOpen) => !isOpen)}
         className="flex items-center gap-1.5 rounded-full p-0.5 text-zinc-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
       >
-        <span className="flex size-9 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-indigo-300 to-sky-300 text-xs font-semibold text-slate-950">
-          AM
-        </span>
+        <ProfileAvatar className="size-9" />
         <svg
           aria-hidden="true"
           viewBox="0 0 20 20"
@@ -63,33 +97,32 @@ export default function ProfileMenu() {
           className="absolute right-0 top-full z-50 mt-2 min-w-60 overflow-hidden rounded-xl border border-white/10 bg-[#15151c] p-1.5 shadow-xl shadow-black/40"
         >
           <div className="flex items-center gap-3 border-b border-white/[0.08] px-3 py-3">
-            <span
-              aria-hidden="true"
-              className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-indigo-300 to-sky-300 text-xs font-semibold text-slate-950"
-            >
-              AM
-            </span>
+            <ProfileAvatar className="size-10" />
             <span className="min-w-0">
-              <span className="block truncate text-sm font-medium text-white">Alex Morgan</span>
-              <span className="block truncate text-xs text-zinc-500">alex@northstar.example</span>
+              <span className="block truncate text-sm font-medium text-white">{profile?.name ?? "Alex Morgan"}</span>
+              <span className="block truncate text-xs text-zinc-500">{profile ? profile.user?.email ?? "" : "alex@northstar.example"}</span>
             </span>
           </div>
+          <div className="border-b border-white/[0.08] px-3 py-2">
+            {profile ? <Link href="/my-profile" onClick={() => setOpen(false)} className="text-xs text-sky-200">Edit profile and photo</Link> : <ProfilePhotoControl compact />}
+          </div>
           <Link
-            href="/settings"
+            href={profile ? "/my-profile" : "/settings"}
             role="menuitem"
             onClick={() => setOpen(false)}
             className="block rounded-lg px-3 py-2.5 text-sm text-zinc-200 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:bg-white/[0.06] focus-visible:outline-none"
           >
             Settings
           </Link>
-          <Link
-            href="/login"
+          <button
+            type="button"
             role="menuitem"
-            onClick={() => setOpen(false)}
-            className="block rounded-lg px-3 py-2.5 text-sm text-zinc-200 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:bg-white/[0.06] focus-visible:outline-none"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-zinc-200 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:bg-white/[0.06] focus-visible:outline-none disabled:opacity-60"
           >
             Logout
-          </Link>
+          </button>
         </div>
       )}
     </div>

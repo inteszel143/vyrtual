@@ -3,18 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import ProfileMenu from "@/components/profile-menu";
+import MessageButton from "@/components/message-button";
+import OwnerWorkspaceBadge from "@/components/owner-workspace-badge";
+import { OwnerNavigationIcon, ownerWorkspaceNavigation as navigation } from "@/components/owner-navigation";
 import { useState, type FormEvent } from "react";
 import { useToast } from "@/components/toast-provider";
-
-const navigation = [
-  { label: "Overview", href: "/dashboard", icon: "overview" },
-  { label: "Virtual office", href: "/office", icon: "office" },
-  { label: "Team", href: "/team", icon: "team" },
-  { label: "Schedules", href: "/schedules", icon: "team" },
-  { label: "Attendance", href: "/attendance", icon: "time" },
-  { label: "Time tracking", href: "/time-tracking", icon: "time" },
-  { label: "Reports", href: "/reports", icon: "reports" },
-];
 
 function Icon({
   name,
@@ -158,7 +151,7 @@ export default function SettingsPage() {
           <nav aria-label="Workspace navigation" className="space-y-1">
             {navigation.map(({ label, href, icon }) => (
               <Link key={href} href={href} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
-                <Icon name={icon} className="size-[18px]" />
+                <OwnerNavigationIcon name={icon} />
                 {label}
               </Link>
             ))}
@@ -170,11 +163,11 @@ export default function SettingsPage() {
               Billing
             </Link>
             <Link href="/company-settings" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
-              <Icon name="settings" className="size-[18px]" />
+              <OwnerNavigationIcon name="company" />
               Company settings
             </Link>
             <Link href="/settings" aria-current="page" className="flex items-center gap-3 rounded-xl bg-sky-400/10 px-3 py-2.5 text-sm font-medium text-sky-200">
-              <Icon name="settings" className="size-[18px]" />
+              <OwnerNavigationIcon name="profile" />
               Settings
             </Link>
           </nav>
@@ -209,11 +202,12 @@ export default function SettingsPage() {
               <span className="text-zinc-200">Settings</span>
             </div>
             <div className="ml-auto flex items-center gap-3">
-              <span className="hidden rounded-full border border-white/[0.08] bg-white/[0.025] px-3 py-1.5 text-xs text-zinc-400 sm:inline-flex">Northstar Studio</span>
+              <OwnerWorkspaceBadge />
               <button type="button" aria-label="Notifications" className="relative flex size-10 items-center justify-center rounded-xl border border-white/[0.08] text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
                 <Icon name="bell" className="size-[18px]" />
                 <span className="absolute right-2 top-2 size-1.5 rounded-full bg-sky-300" />
               </button>
+              <MessageButton />
               <ProfileMenu />
             </div>
           </header>
