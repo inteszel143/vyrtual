@@ -36,7 +36,17 @@ create policy owner_workspace on public.workspaces for select to authenticated u
 create policy owner_invitations on public.team_invitations for select to authenticated using (exists (select 1 from public.workspaces w where w.id = workspace_id and w.owner_id = auth.uid()));
 create policy owner_members on public.workspace_members for select to authenticated using (exists (select 1 from public.workspaces w where w.id = workspace_id and w.owner_id = auth.uid()));
 revoke all on public.workspaces, public.team_invitations, public.workspace_members from anon, authenticated;
-grant select on public.workspaces, public.team_invitations, public.workspace_members to authenticated;
+grant select on public.workspaces to anon;
+grant select, insert, update, delete on public.workspaces to authenticated;
+grant select, insert, update, delete on public.workspaces to service_role;
+
+grant select on public.team_invitations to anon;
+grant select, insert, update, delete on public.team_invitations to authenticated;
+grant select, insert, update, delete on public.team_invitations to service_role;
+
+grant select on public.workspace_members to anon;
+grant select, insert, update, delete on public.workspace_members to authenticated;
+grant select, insert, update, delete on public.workspace_members to service_role;
 
 create function public.prepare_team_invitation(company_name text, invite_email text, invite_name text, invite_role text, invite_type text)
 returns public.team_invitations language plpgsql security definer set search_path = '' as $$
