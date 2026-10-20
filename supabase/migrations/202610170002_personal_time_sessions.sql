@@ -10,7 +10,9 @@ create unique index one_active_personal_session on public.personal_time_sessions
 create index personal_session_history on public.personal_time_sessions(user_id, ended_at);
 alter table public.personal_time_sessions enable row level security;
 revoke all on public.personal_time_sessions from anon, authenticated;
-grant select on public.personal_time_sessions to authenticated;
+grant select on public.personal_time_sessions to anon;
+grant select, insert, update, delete on public.personal_time_sessions to authenticated;
+grant select, insert, update, delete on public.personal_time_sessions to service_role;
 create policy own_time_sessions on public.personal_time_sessions for select to authenticated using (user_id = (select auth.uid()));
 
 create function public.start_personal_time_session()

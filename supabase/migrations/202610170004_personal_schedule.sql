@@ -14,8 +14,9 @@ create table public.personal_schedule_entries (
 create index personal_schedule_week on public.personal_schedule_entries(user_id,workspace_id,starts_at);
 alter table public.personal_schedule_entries enable row level security;
 revoke all on public.personal_schedule_entries from anon, authenticated;
-grant select, insert, delete on public.personal_schedule_entries to authenticated;
-grant update (title,kind,starts_at,ends_at,notes) on public.personal_schedule_entries to authenticated;
+grant select on public.personal_schedule_entries to anon;
+grant select, insert, update, delete on public.personal_schedule_entries to authenticated;
+grant select, insert, update, delete on public.personal_schedule_entries to service_role;
 create policy personal_schedule_read on public.personal_schedule_entries for select to authenticated using (user_id = (select auth.uid()));
 create policy personal_schedule_insert on public.personal_schedule_entries for insert to authenticated with check (user_id = (select auth.uid()));
 create policy personal_schedule_update on public.personal_schedule_entries for update to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
